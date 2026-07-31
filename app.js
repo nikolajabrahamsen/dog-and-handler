@@ -101,8 +101,9 @@ function openRegisterModal(classId, classes) {
             <input id="email" name="email" type="email" required autocomplete="email" />
           </div>
           <div class="field">
-            <label for="phone">Phone (for MobilePay)</label>
+            <label for="phone">Phone</label>
             <input id="phone" name="phone" type="tel" required autocomplete="tel" placeholder="+45 12 34 56 78" />
+            <p class="field-note" id="phoneNote">Used to link your MobilePay payment and reach you if needed.</p>
           </div>
 
           <label class="checkbox-row">
@@ -141,15 +142,18 @@ function openRegisterModal(classId, classes) {
   });
 
   const payNote = document.getElementById('payNote');
+  const phoneNote = document.getElementById('phoneNote');
   const payBtn = document.getElementById('payBtn');
   document.querySelectorAll('input[name="payment_method"]').forEach((radio) => {
     radio.addEventListener('change', (e) => {
       if (e.target.value === 'pay_at_class') {
         payNote.textContent = "Your spot is confirmed right away. Bring payment with you to your first class.";
         payBtn.textContent = 'Confirm registration';
+        phoneNote.textContent = "In case we need to reach you about your class.";
       } else {
         payNote.textContent = "You'll be taken to MobilePay to approve the payment. Your spot is only confirmed once the payment goes through.";
         payBtn.textContent = 'Register';
+        phoneNote.textContent = 'Used to link your MobilePay payment and reach you if needed.';
       }
     });
   });
