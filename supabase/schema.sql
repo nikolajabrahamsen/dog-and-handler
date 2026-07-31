@@ -26,6 +26,7 @@ create table if not exists registrations (
     check (status in ('pending', 'confirmed', 'failed', 'cancelled', 'expired')),
   payment_method text not null default 'mobilepay'
     check (payment_method in ('mobilepay', 'pay_at_class')),
+  newsletter_opt_in boolean not null default false,
   mobilepay_payment_id text,
   mobilepay_reference text,
   created_at timestamptz not null default now(),
@@ -63,7 +64,8 @@ create or replace function create_registration(
   p_dog_name text,
   p_email text,
   p_phone text,
-  p_payment_method text default 'mobilepay'
+  p_payment_method text default 'mobilepay',
+  p_newsletter_opt_in boolean default false
 ) returns registrations
 language plpgsql
 as $$
@@ -91,8 +93,8 @@ begin
     raise exception 'class_full';
   end if;
 
-  insert into registrations (class_id, owner_name, dog_name, email, phone, status, payment_method)
-  values (p_class_id, p_owner_name, p_dog_name, p_email, p_phone, 'pending', p_payment_method)
+  insert into registrations (class_id, owner_name, dog_name, email, phone, status, payment_method, newsletter_opt_in)
+  values (p_class_id, p_owner_name, p_dog_name, p_email, p_phone, 'pending', p_payment_method, p_newsletter_opt_in)
   returning * into v_reg;
 
   return v_reg;
@@ -152,3 +154,10 @@ $$;
 -- which bypasses RLS - so nothing needs to be granted to anon/public here.
 alter table classes enable row level security;
 alter table registrations enable row level security;
+
+-- One row per subscribed email, deduplicated, for the admin newsletter tool.
+create or replace view newsletter_subscribers as
+select distinct on (lower(email)) email, owner_name
+from registrations
+where newsletter_opt_in = true
+order by lower(email), created_at desc;

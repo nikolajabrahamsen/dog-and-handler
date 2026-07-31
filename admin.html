@@ -73,6 +73,25 @@
   </div>
 
   <div class="admin-card">
+    <h2>Newsletter</h2>
+    <p style="color: var(--bone-dim); font-size: 13px; margin-top:-4px;">
+      <span id="subscriberCount">Loading subscriber count…</span>
+    </p>
+    <form id="newsletterForm">
+      <label for="nlSubject">Subject</label>
+      <input id="nlSubject" required />
+
+      <label for="nlMessage">Message</label>
+      <textarea id="nlMessage" required style="min-height:140px;" placeholder="Write your update here. Separate paragraphs with a blank line."></textarea>
+
+      <div style="margin-top:16px">
+        <button class="btn btn-primary" type="submit" id="nlSendBtn">Send to subscribers</button>
+      </div>
+      <div id="nlMsg" class="form-error" style="color: var(--brass-bright)" hidden></div>
+    </form>
+  </div>
+
+  <div class="admin-card">
     <h2>Classes &amp; rosters</h2>
     <div id="classesList">Loading…</div>
   </div>

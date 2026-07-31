@@ -8,6 +8,6 @@
 //   - publishableKey: the "Publishable key" (starts with sb_publishable_...)
 //     — NOT the secret key, never put that here.
 const SUPABASE_CONFIG = {
-  url: 'https://qgokzgkylxfmrnodpemp.supabase.co',
-  publishableKey: 'sb_publishable_Gbg2TN9rGkR82CnCYPIXCA_to_ZQ2-R',
+  url: 'https://YOUR-PROJECT-REF.supabase.co',
+  publishableKey: 'sb_publishable_REPLACE_ME',
 };

@@ -105,6 +105,11 @@ function openRegisterModal(classId, classes) {
             <input id="phone" name="phone" type="tel" required autocomplete="tel" placeholder="+45 12 34 56 78" />
           </div>
 
+          <label class="checkbox-row">
+            <input type="checkbox" id="newsletter_opt_in" name="newsletter_opt_in" />
+            <span>Send me news and updates about upcoming classes by email</span>
+          </label>
+
           <fieldset class="payment-choice">
             <legend>How will you pay?</legend>
             <label class="radio-row">
@@ -168,6 +173,7 @@ function openRegisterModal(classId, classes) {
       email: formData.get('email'),
       phone: formData.get('phone'),
       payment_method: paymentMethod,
+      newsletter_opt_in: formData.get('newsletter_opt_in') === 'on',
     };
 
     try {

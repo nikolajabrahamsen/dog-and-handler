@@ -11,6 +11,10 @@ serverless invocations.
 The admin panel (`/admin.html`) is behind a real login (Supabase Auth) —
 only accounts you create yourself can sign in and manage classes.
 
+Customers can also opt in to a newsletter when they register, and the
+admin panel has a simple tool to email everyone who opted in, with a
+one-click unsubscribe link in every email.
+
 ## How it works
 
 - **Frontend**: plain HTML/CSS/JS PWA at the project root — installable,
@@ -33,8 +37,9 @@ only accounts you create yourself can sign in and manage classes.
    `supabase/schema.sql`. This creates the tables, the availability view,
    and the two functions the API relies on.
    - If you already ran an older version of this schema, instead run
-     `supabase/migration-2-pay-at-class.sql` — it adds the `payment_method`
-     column and updates the function, without touching existing data.
+     `supabase/migration-2-pay-at-class.sql` then
+     `supabase/migration-3-newsletter.sql` — each only adds new columns
+     and functions, without touching existing data.
 2. Grab your **Project URL** and **Secret key** (Project Settings → API →
    API Keys — on newer Supabase projects this replaces the old
    `service_role` key; it works as a drop-in equivalent). This is a
@@ -76,7 +81,21 @@ only accounts you create yourself can sign in and manage classes.
    but signature checking is a worthwhile extra layer before going live).
 4. Full API reference: https://developer.vippsmobilepay.com/docs/APIs/epayment-api/
 
-## 3. Deploy
+## 3. Set up newsletter emails (Resend)
+
+1. Sign up at [resend.com](https://resend.com), verify a sending domain
+   you own (Resend walks you through adding a couple of DNS records).
+2. Create an **API key** (Resend dashboard → API Keys).
+3. You'll add `RESEND_API_KEY`, `EMAIL_FROM` (e.g.
+   `Dog & Handler <news@yourdomain.com>`, using your verified domain),
+   and `NEWSLETTER_UNSUBSCRIBE_SECRET` (any long random string you make
+   up) to Vercel's environment variables in the next step.
+
+If you'd rather skip this for now, that's fine — registration and the
+admin panel work without it. The "Send to subscribers" button will just
+fail with a clear error until these are set.
+
+## 4. Deploy
 
 1. Push this folder to a GitHub repo, then **import it in Vercel** as a
    new project (Vercel auto-detects the `api/` functions and serves the
@@ -105,8 +124,11 @@ locally. Since MobilePay needs a public HTTPS URL for its webhook, use a
 tunnel (e.g. `ngrok http 3000`) and temporarily set `PUBLIC_BASE_URL` in
 `.env.local` to the tunnel URL while testing a full payment flow.
 
-## 4. Before going live, a few things worth tightening
+## 5. Before going live, a few things worth tightening
 
+- **Email deliverability**: for real sending volume, make sure your
+  Resend domain's SPF/DKIM are verified (Resend flags this in their
+  dashboard) so newsletters don't land in spam.
 - **Adding more admins**: create additional users in Supabase Auth
   (Authentication → Users → Add user) and, if you're using the
   `ADMIN_EMAILS` allow-list, add their email there too.
@@ -136,13 +158,19 @@ api/
     [id].js                   GET registration status
   webhooks/
     mobilepay.js               receive MobilePay payment confirmations
+  admin/
+    newsletter.js              GET subscriber count / POST send newsletter
+  unsubscribe.js                one-click unsubscribe (no login needed)
 lib/
   supabase.js                 Supabase client (secret/service role key)
   mobilepay.js                MobilePay ePayment API client
+  email.js                     Resend email client
+  unsubscribe.js                signed unsubscribe link helper
   http.js                     Supabase-Auth admin check / base-url helper
 supabase/
   schema.sql                   run once in the Supabase SQL editor (fresh installs)
-  migration-2-pay-at-class.sql   run instead if you already had the old schema
+  migration-2-pay-at-class.sql   run these instead if you already had the
+  migration-3-newsletter.sql       old schema, in order
 index.html, login.html, admin.html, payment-return.html   pages
 app.js, admin.js                                             page logic
 supabase-config.js              Supabase URL + publishable key (safe to be public)

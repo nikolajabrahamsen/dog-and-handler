@@ -16,6 +16,7 @@ module.exports = async function handler(req, res) {
 
   const { class_id, owner_name, dog_name, email, phone } = req.body || {};
   const payment_method = req.body?.payment_method === 'pay_at_class' ? 'pay_at_class' : 'mobilepay';
+  const newsletter_opt_in = req.body?.newsletter_opt_in === true;
 
   if (!class_id || !owner_name || !email || !phone) {
     return res.status(400).json({ error: 'class_id, owner_name, email and phone are required' });
@@ -30,6 +31,7 @@ module.exports = async function handler(req, res) {
       p_email: email,
       p_phone: phone,
       p_payment_method: payment_method,
+      p_newsletter_opt_in: newsletter_opt_in,
     })
     .single();
 

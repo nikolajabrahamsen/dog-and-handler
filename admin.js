@@ -143,8 +143,53 @@ async function loadRoster(id) {
   }
 }
 
+async function loadSubscriberCount() {
+  const el = document.getElementById('subscriberCount');
+  try {
+    const res = await fetch(`${API}/admin/newsletter`, { headers: authHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to load');
+    el.textContent = `${data.count} subscriber${data.count === 1 ? '' : 's'} opted in to news emails.`;
+  } catch (err) {
+    el.textContent = 'Could not load subscriber count.';
+  }
+}
+
+document.getElementById('newsletterForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('nlMsg');
+  const btn = document.getElementById('nlSendBtn');
+  msg.hidden = true;
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  const body = {
+    subject: document.getElementById('nlSubject').value,
+    message: document.getElementById('nlMessage').value,
+  };
+
+  try {
+    const res = await fetch(`${API}/admin/newsletter`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to send');
+
+    msg.textContent = data.sent != null ? `Sent to ${data.sent} subscriber${data.sent === 1 ? '' : 's'}${data.failed ? ` (${data.failed} failed)` : ''}.` : data.message;
+    msg.style.color = data.failed ? 'var(--clay)' : 'var(--brass-bright)';
+    msg.hidden = false;
+    e.target.reset();
+  } catch (err) {
+    msg.textContent = err.message;
+    msg.style.color = 'var(--clay)';
+    msg.hidden = false;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send to subscribers';
+  }
+});
+
 (async function init() {
   const session = await requireSession();
   if (!session) return;
   loadClasses();
+  loadSubscriberCount();
 })();

@@ -273,6 +273,18 @@ a { color: inherit; }
   color: #46422f;
 }
 
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 0 6px;
+  font-size: 13px;
+  color: #46422f;
+  cursor: pointer;
+  line-height: 1.4;
+}
+.checkbox-row input { accent-color: var(--brass); width: 16px; height: 16px; margin-top: 1px; flex-shrink: 0; }
+
 .payment-choice {
   border: 1px solid #d8d0b8;
   border-radius: var(--radius-sm);
