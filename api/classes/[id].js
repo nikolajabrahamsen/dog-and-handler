@@ -1,5 +1,5 @@
 const { supabase } = require('../../lib/supabase');
-const { isAdmin } = require('../../lib/http');
+const { requireAdmin } = require('../../lib/http');
 
 function withComputed(row) {
   const spotsLeft = Math.max(0, row.max_participants - row.held_count);
@@ -25,7 +25,7 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method === 'PATCH') {
-    if (!isAdmin(req)) return res.status(401).json({ error: 'Unauthorized' });
+    if (!(await requireAdmin(req))) return res.status(401).json({ error: 'Unauthorized' });
 
     const allowed = ['title', 'description', 'starts_at', 'weekday', 'location', 'max_participants', 'price_dkk', 'is_open'];
     const updates = {};

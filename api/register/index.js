@@ -15,6 +15,8 @@ module.exports = async function handler(req, res) {
   }
 
   const { class_id, owner_name, dog_name, email, phone } = req.body || {};
+  const payment_method = req.body?.payment_method === 'pay_at_class' ? 'pay_at_class' : 'mobilepay';
+
   if (!class_id || !owner_name || !email || !phone) {
     return res.status(400).json({ error: 'class_id, owner_name, email and phone are required' });
   }
@@ -27,6 +29,7 @@ module.exports = async function handler(req, res) {
       p_dog_name: dog_name || null,
       p_email: email,
       p_phone: phone,
+      p_payment_method: payment_method,
     })
     .single();
 
@@ -41,8 +44,25 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'Could not create registration' });
   }
 
-  const { data: cls } = await supabase.from('classes').select('*').eq('id', class_id).single();
   const base = requestBaseUrl(req);
+
+  // --- Pay at class: confirm the seat immediately, no MobilePay involved. ---
+  if (payment_method === 'pay_at_class') {
+    const { error: confirmError } = await supabase.rpc('confirm_registration', { p_reg_id: reg.id });
+    if (confirmError) {
+      console.error('confirm_registration error:', confirmError);
+      return res.status(500).json({ error: 'Could not confirm registration' });
+    }
+    // Reuse the same "confirming your spot" page - it polls status and will
+    // immediately show the confirmed state since the seat is already booked.
+    return res.status(201).json({
+      registration_id: reg.id,
+      redirect_url: `${base}/payment-return.html?reg=${reg.id}`,
+    });
+  }
+
+  // --- MobilePay: create the payment and send the customer to approve it. ---
+  const { data: cls } = await supabase.from('classes').select('*').eq('id', class_id).single();
 
   try {
     const payment = await createPayment({

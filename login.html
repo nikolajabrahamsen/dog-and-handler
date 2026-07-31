@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin login — Dog &amp; Handler</title>
+<link rel="stylesheet" href="/styles.css" />
+<style>
+  .login-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .login-card {
+    background: var(--pine-deep);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 28px;
+    width: 100%;
+    max-width: 380px;
+  }
+  .login-card h1 {
+    font-family: var(--font-display);
+    font-size: 26px;
+    margin: 0 0 6px;
+  }
+  .login-card p.sub { color: var(--bone-dim); font-size: 14px; margin: 0 0 22px; }
+  .login-card label { display: block; font-size: 13px; margin: 14px 0 6px; color: var(--bone-dim); }
+  .login-card input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--pine);
+    color: var(--bone);
+    font-size: 14px;
+  }
+  .login-card button {
+    width: 100%;
+    margin-top: 20px;
+  }
+  .login-error { color: var(--clay); font-size: 13px; margin-top: 12px; min-height: 1em; }
+</style>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card">
+    <h1>Admin login</h1>
+    <p class="sub">Sign in to manage Dog &amp; Handler classes.</p>
+
+    <form id="loginForm">
+      <label for="email">Email</label>
+      <input id="email" type="email" required autocomplete="username" />
+
+      <label for="password">Password</label>
+      <input id="password" type="password" required autocomplete="current-password" />
+
+      <button type="submit" class="btn btn-primary" id="loginBtn">Sign in</button>
+      <div class="login-error" id="loginError"></div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="/supabase-config.js"></script>
+<script>
+  const client = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.publishableKey);
+
+  // Already signed in? Skip straight to the admin page.
+  client.auth.getSession().then(({ data }) => {
+    if (data.session) window.location.href = '/admin.html';
+  });
+
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('loginBtn');
+    const errorEl = document.getElementById('loginError');
+    errorEl.textContent = '';
+    btn.disabled = true;
+    btn.textContent = 'Signing in…';
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    const { error } = await client.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      errorEl.textContent = 'Incorrect email or password.';
+      btn.disabled = false;
+      btn.textContent = 'Sign in';
+      return;
+    }
+
+    window.location.href = '/admin.html';
+  });
+</script>
+</body>
+</html>

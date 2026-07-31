@@ -105,14 +105,26 @@ function openRegisterModal(classId, classes) {
             <input id="phone" name="phone" type="tel" required autocomplete="tel" placeholder="+45 12 34 56 78" />
           </div>
 
+          <fieldset class="payment-choice">
+            <legend>How will you pay?</legend>
+            <label class="radio-row">
+              <input type="radio" name="payment_method" value="mobilepay" checked />
+              <span>Pay now with MobilePay</span>
+            </label>
+            <label class="radio-row">
+              <input type="radio" name="payment_method" value="pay_at_class" />
+              <span>Pay at class</span>
+            </label>
+          </fieldset>
+
           <div id="formError" class="form-error" hidden></div>
 
           <div class="modal-actions">
             <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
-            <button type="submit" class="btn btn-primary" id="payBtn">Pay with MobilePay</button>
+            <button type="submit" class="btn btn-primary" id="payBtn">Register</button>
           </div>
 
-          <p class="pay-note">You'll be taken to MobilePay to approve the payment. Your spot is only confirmed once the payment goes through.</p>
+          <p class="pay-note" id="payNote">You'll be taken to MobilePay to approve the payment. Your spot is only confirmed once the payment goes through.</p>
         </form>
       </div>
     </div>
@@ -123,21 +135,39 @@ function openRegisterModal(classId, classes) {
     if (e.target.id === 'backdrop') closeModal();
   });
 
+  const payNote = document.getElementById('payNote');
+  const payBtn = document.getElementById('payBtn');
+  document.querySelectorAll('input[name="payment_method"]').forEach((radio) => {
+    radio.addEventListener('change', (e) => {
+      if (e.target.value === 'pay_at_class') {
+        payNote.textContent = "Your spot is confirmed right away. Bring payment with you to your first class.";
+        payBtn.textContent = 'Confirm registration';
+      } else {
+        payNote.textContent = "You'll be taken to MobilePay to approve the payment. Your spot is only confirmed once the payment goes through.";
+        payBtn.textContent = 'Register';
+      }
+    });
+  });
+
   document.getElementById('regForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const errorEl = document.getElementById('formError');
-    const payBtn = document.getElementById('payBtn');
     errorEl.hidden = true;
-    payBtn.disabled = true;
-    payBtn.textContent = 'Starting payment…';
 
     const formData = new FormData(e.target);
+    const paymentMethod = formData.get('payment_method') || 'mobilepay';
+    const originalLabel = paymentMethod === 'pay_at_class' ? 'Confirm registration' : 'Register';
+
+    payBtn.disabled = true;
+    payBtn.textContent = paymentMethod === 'pay_at_class' ? 'Confirming…' : 'Starting payment…';
+
     const payload = {
       class_id: cls.id,
       owner_name: formData.get('owner_name'),
       dog_name: formData.get('dog_name'),
       email: formData.get('email'),
       phone: formData.get('phone'),
+      payment_method: paymentMethod,
     };
 
     try {
@@ -152,13 +182,14 @@ function openRegisterModal(classId, classes) {
         throw new Error(data.error || 'Something went wrong');
       }
 
-      // Send them into MobilePay to approve the payment.
+      // MobilePay -> their app to approve payment. Pay-at-class -> our own
+      // confirmation page, since the seat is already booked.
       window.location.href = data.redirect_url;
     } catch (err) {
       errorEl.textContent = err.message;
       errorEl.hidden = false;
       payBtn.disabled = false;
-      payBtn.textContent = 'Pay with MobilePay';
+      payBtn.textContent = originalLabel;
     }
   });
 }

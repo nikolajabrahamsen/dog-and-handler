@@ -1,13 +1,27 @@
 const API = '/api';
-const keyInput = document.getElementById('adminKey');
+const client = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.publishableKey);
 
-// Keep the key only in memory for this tab (not persisted to disk).
-keyInput.value = sessionStorage.getItem('adminKey') || '';
-keyInput.addEventListener('input', () => sessionStorage.setItem('adminKey', keyInput.value));
+let accessToken = null;
+
+async function requireSession() {
+  const { data } = await client.auth.getSession();
+  if (!data.session) {
+    window.location.href = '/login.html';
+    return null;
+  }
+  accessToken = data.session.access_token;
+  document.getElementById('userEmail').textContent = data.session.user.email;
+  return data.session;
+}
 
 function authHeaders() {
-  return { 'Content-Type': 'application/json', 'x-admin-key': keyInput.value };
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` };
 }
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await client.auth.signOut();
+  window.location.href = '/login.html';
+});
 
 document.getElementById('createForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -109,7 +123,7 @@ async function loadRoster(id) {
 
     box.innerHTML = `
       <table>
-        <thead><tr><th>Owner</th><th>Dog</th><th>Email</th><th>Phone</th><th>Status</th></tr></thead>
+        <thead><tr><th>Owner</th><th>Dog</th><th>Email</th><th>Phone</th><th>Payment</th><th>Status</th></tr></thead>
         <tbody>
           ${rows.map((r) => `
             <tr>
@@ -117,6 +131,7 @@ async function loadRoster(id) {
               <td>${r.dog_name || '—'}</td>
               <td>${r.email}</td>
               <td>${r.phone}</td>
+              <td>${r.payment_method === 'pay_at_class' ? 'At class' : 'MobilePay'}</td>
               <td><span class="tag tag-${r.status}">${r.status}</span></td>
             </tr>
           `).join('')}
@@ -128,4 +143,8 @@ async function loadRoster(id) {
   }
 }
 
-loadClasses();
+(async function init() {
+  const session = await requireSession();
+  if (!session) return;
+  loadClasses();
+})();

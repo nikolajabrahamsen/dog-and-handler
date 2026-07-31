@@ -23,12 +23,12 @@
 </head>
 <body>
 <div class="admin-wrap">
-  <h1 class="wordmark" style="font-size:32px">Admin</h1>
-
-  <div class="admin-card">
-    <h2>Admin key</h2>
-    <label for="adminKey">Paste your ADMIN_KEY (kept only in this browser tab)</label>
-    <input id="adminKey" type="password" />
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+    <h1 class="wordmark" style="font-size:32px; margin:0;">Admin</h1>
+    <div style="text-align:right;">
+      <div id="userEmail" style="font-size:13px; color:var(--bone-dim); margin-bottom:6px;"></div>
+      <button class="btn btn-secondary" id="logoutBtn">Log out</button>
+    </div>
   </div>
 
   <div class="admin-card">
@@ -78,6 +78,8 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="/supabase-config.js"></script>
 <script src="/admin.js"></script>
 </body>
 </html>
