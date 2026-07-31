@@ -1,0 +1,314 @@
+/* ===== Design tokens =====
+   Palette: deep pine (#1F2A20) as the anchor, warm bone (#F3EEE1) for
+   surfaces, brass (#C89B3C) as the one warm accent, clay (#B5533C) used
+   sparingly for urgency (spots running low / closed states).
+   Type: a sturdy serif for display (evokes a hand-painted kennel sign),
+   a plain grotesk for body/UI so the form itself stays fast to read.
+   Signature: the "lead line" - a looped dashed rule (like a leash) that
+   separates the hero from the class list instead of a plain divider.
+*/
+:root {
+  --pine: #1F2A20;
+  --pine-deep: #141C16;
+  --bone: #F3EEE1;
+  --bone-dim: #E7E0CC;
+  --brass: #C89B3C;
+  --brass-bright: #E0B54D;
+  --clay: #B5533C;
+  --ink: #22201B;
+  --line: rgba(243, 238, 225, 0.14);
+
+  --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', ui-serif, serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--pine);
+  color: var(--bone);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; }
+
+.wrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 20px 80px;
+}
+
+/* ---- Hero ---- */
+.hero {
+  padding: 56px 20px 40px;
+  text-align: center;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brass-bright);
+  margin-bottom: 14px;
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-size: clamp(34px, 7vw, 52px);
+  line-height: 1.05;
+  margin: 0 0 12px;
+  letter-spacing: -0.01em;
+}
+
+.wordmark .accent { color: var(--brass-bright); font-style: italic; }
+
+.hero p {
+  color: var(--bone-dim);
+  font-size: 16px;
+  max-width: 46ch;
+  margin: 0 auto;
+}
+
+/* Signature "lead line" divider - a looped dashed rule like a leash */
+.lead-line {
+  height: 28px;
+  margin: 36px auto 8px;
+  max-width: 760px;
+}
+.lead-line svg { width: 100%; height: 100%; display: block; }
+
+/* ---- Class list ---- */
+.section-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  margin: 8px 0 20px;
+  color: var(--bone);
+}
+
+.class-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.class-card {
+  background: var(--pine-deep);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  display: grid;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.class-card::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: var(--brass);
+}
+
+.class-card.is-closed::before { background: var(--clay); }
+.class-card.is-closed { opacity: 0.7; }
+
+.class-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.class-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  margin: 0;
+}
+
+.class-meta {
+  color: var(--bone-dim);
+  font-size: 14px;
+  margin: 0;
+}
+
+.class-desc {
+  color: var(--bone-dim);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 4px 0 0;
+}
+
+.class-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.price {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--brass-bright);
+}
+
+.spots {
+  font-size: 13px;
+  color: var(--bone-dim);
+}
+.spots.low { color: var(--clay); font-weight: 600; }
+
+.btn {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: transform 0.08s ease, opacity 0.15s ease;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: var(--brass);
+  color: var(--pine-deep);
+}
+.btn-primary:hover { background: var(--brass-bright); }
+
+.btn-disabled {
+  background: transparent;
+  color: var(--bone-dim);
+  border: 1px solid var(--line);
+  cursor: not-allowed;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--bone-dim);
+  padding: 40px 20px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+}
+
+/* ---- Modal / registration form ---- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 14, 10, 0.6);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 40;
+}
+@media (min-width: 640px) {
+  .modal-backdrop { align-items: center; }
+}
+
+.modal {
+  background: var(--bone);
+  color: var(--ink);
+  width: 100%;
+  max-width: 480px;
+  border-radius: 18px 18px 0 0;
+  padding: 26px 24px 28px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+@media (min-width: 640px) {
+  .modal { border-radius: var(--radius); }
+}
+
+.modal h3 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  margin: 0 0 4px;
+}
+
+.modal .sub {
+  color: #5c5748;
+  font-size: 14px;
+  margin: 0 0 20px;
+}
+
+.field { margin-bottom: 14px; }
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #46422f;
+}
+.field input {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #d8d0b8;
+  font-size: 15px;
+  background: #fff;
+  color: var(--ink);
+}
+.field input:focus {
+  outline: 2px solid var(--brass);
+  outline-offset: 1px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid #d8d0b8;
+  color: #46422f;
+}
+
+.form-error {
+  color: var(--clay);
+  font-size: 13px;
+  margin: -6px 0 14px;
+}
+
+.pay-note {
+  font-size: 12px;
+  color: #6b6650;
+  margin-top: 14px;
+  line-height: 1.5;
+}
+
+/* ---- Status / return page ---- */
+.status-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+}
+.status-card {
+  max-width: 420px;
+}
+.status-icon { font-size: 40px; margin-bottom: 16px; }
+.status-card h1 {
+  font-family: var(--font-display);
+  font-size: 26px;
+  margin: 0 0 10px;
+}
+.status-card p { color: var(--bone-dim); line-height: 1.6; }
+
+/* Focus visibility for keyboard users */
+:focus-visible { outline: 2px solid var(--brass-bright); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn { transition: none; }
+}

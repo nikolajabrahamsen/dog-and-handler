@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Confirming your spot… — Dog &amp; Handler</title>
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<div class="status-page">
+  <div class="status-card" id="statusCard">
+    <div class="status-icon">🐾</div>
+    <h1 id="statusTitle">Confirming your payment…</h1>
+    <p id="statusBody">Hang tight, this only takes a moment.</p>
+  </div>
+</div>
+
+<script>
+  const API = '/api';
+  const params = new URLSearchParams(window.location.search);
+  const regId = params.get('reg');
+
+  const titleEl = document.getElementById('statusTitle');
+  const bodyEl = document.getElementById('statusBody');
+  const iconEl = document.querySelector('.status-icon');
+
+  async function poll(attempt = 0) {
+    if (!regId) {
+      titleEl.textContent = "We couldn't find that registration";
+      bodyEl.textContent = 'Please go back and try registering again.';
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/register/${regId}`);
+      const reg = await res.json();
+
+      if (reg.status === 'confirmed') {
+        iconEl.textContent = '✅';
+        titleEl.textContent = "You're in!";
+        bodyEl.textContent = "Your spot is confirmed and we've sent a confirmation to your email.";
+        return;
+      }
+
+      if (reg.status === 'failed' || reg.status === 'cancelled' || reg.status === 'expired') {
+        iconEl.textContent = '⚠️';
+        titleEl.textContent = 'Payment not completed';
+        bodyEl.textContent = 'Your registration was not confirmed. No payment was taken — feel free to try again.';
+        return;
+      }
+
+      // Still pending - MobilePay's webhook may take a few seconds. Keep polling.
+      if (attempt < 15) {
+        setTimeout(() => poll(attempt + 1), 2000);
+      } else {
+        titleEl.textContent = 'Still confirming…';
+        bodyEl.textContent = "This is taking longer than usual. We'll email you as soon as it's confirmed.";
+      }
+    } catch (err) {
+      titleEl.textContent = 'Something went wrong';
+      bodyEl.textContent = 'Please check your email shortly, or contact us if you\'re unsure.';
+    }
+  }
+
+  poll();
+</script>
+</body>
+</html>

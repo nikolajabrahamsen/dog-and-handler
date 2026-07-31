@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin — Dog &amp; Handler</title>
+<link rel="stylesheet" href="/styles.css" />
+<style>
+  .admin-wrap { max-width: 720px; margin: 0 auto; padding: 40px 20px 80px; }
+  .admin-card { background: var(--pine-deep); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; margin-bottom: 24px; }
+  .admin-card h2 { font-family: var(--font-display); margin-top: 0; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  label { display:block; font-size: 13px; margin: 10px 0 4px; color: var(--bone-dim); }
+  input, textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--pine); color: var(--bone); font-size: 14px; }
+  textarea { min-height: 70px; font-family: inherit; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+  .tag { display:inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; }
+  .tag-confirmed { background: rgba(200,155,60,0.2); color: var(--brass-bright); }
+  .tag-pending { background: rgba(255,255,255,0.1); color: var(--bone-dim); }
+  .tag-failed, .tag-expired, .tag-cancelled { background: rgba(181,83,60,0.2); color: var(--clay); }
+</style>
+</head>
+<body>
+<div class="admin-wrap">
+  <h1 class="wordmark" style="font-size:32px">Admin</h1>
+
+  <div class="admin-card">
+    <h2>Admin key</h2>
+    <label for="adminKey">Paste your ADMIN_KEY (kept only in this browser tab)</label>
+    <input id="adminKey" type="password" />
+  </div>
+
+  <div class="admin-card">
+    <h2>Create a class</h2>
+    <form id="createForm">
+      <label for="title">Title</label>
+      <input id="title" required />
+
+      <label for="description">Description</label>
+      <textarea id="description"></textarea>
+
+      <div class="grid-2">
+        <div>
+          <label for="starts_at">Start date &amp; time</label>
+          <input id="starts_at" type="datetime-local" required />
+        </div>
+        <div>
+          <label for="weekday">Weekday label (optional)</label>
+          <input id="weekday" placeholder="e.g. Tuesdays" />
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <label for="location">Location</label>
+          <input id="location" />
+        </div>
+        <div>
+          <label for="max_participants">Max participants</label>
+          <input id="max_participants" type="number" min="1" required />
+        </div>
+      </div>
+
+      <label for="price_dkk">Price (DKK)</label>
+      <input id="price_dkk" type="number" min="0" required />
+
+      <div style="margin-top:16px">
+        <button class="btn btn-primary" type="submit">Create class</button>
+      </div>
+      <div id="createMsg" class="form-error" style="color: var(--brass-bright)" hidden></div>
+    </form>
+  </div>
+
+  <div class="admin-card">
+    <h2>Classes &amp; rosters</h2>
+    <div id="classesList">Loading…</div>
+  </div>
+</div>
+
+<script src="/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Dog &amp; Handler</title>
+<meta name="description" content="Sign up for this month's dog training classes" />
+<link rel="manifest" href="/manifest.json" />
+<meta name="theme-color" content="#1F2A20" />
+<link rel="apple-touch-icon" href="/icons/icon-192.png" />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <span class="eyebrow">New classes every month</span>
+    <h1 class="wordmark">Dog <span class="accent">&amp;</span> Handler</h1>
+    <p>Pick a class, register your dog, and pay securely with MobilePay. Your spot is confirmed the moment payment goes through.</p>
+  </header>
+
+  <div class="lead-line" aria-hidden="true">
+    <svg viewBox="0 0 760 28" preserveAspectRatio="none">
+      <path d="M0,14 C 60,2 100,26 160,14 S 260,2 320,14 S 420,26 480,14 S 580,2 640,14 S 720,26 760,14"
+            fill="none" stroke="#C89B3C" stroke-width="2" stroke-dasharray="1 10" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <main>
+    <h2 class="section-title">This month's classes</h2>
+    <div id="classList" class="class-grid" aria-live="polite">
+      <p style="color: var(--bone-dim)">Loading classes…</p>
+    </div>
+  </main>
+</div>
+
+<div id="modalRoot"></div>
+
+<script src="/app.js"></script>
+</body>
+</html>
