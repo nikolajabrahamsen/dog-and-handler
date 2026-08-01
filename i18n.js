@@ -119,6 +119,8 @@ const TRANSLATIONS = {
     col_status: 'Status',
     payment_at_class: 'Ved fremmøde',
     payment_mobilepay: 'MobilePay',
+    delete_registration_btn: 'Slet tilmelding',
+    confirm_delete_registration: 'Er du sikker på, at du vil slette denne tilmelding? Dette kan ikke fortrydes.',
   },
 
   en: {
@@ -230,6 +232,8 @@ const TRANSLATIONS = {
     col_status: 'Status',
     payment_at_class: 'At class',
     payment_mobilepay: 'MobilePay',
+    delete_registration_btn: 'Delete registration',
+    confirm_delete_registration: 'Are you sure you want to delete this registration? This cannot be undone.',
   },
 };
 

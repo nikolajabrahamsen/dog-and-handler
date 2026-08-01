@@ -138,7 +138,7 @@ async function loadRoster(id) {
 
     box.innerHTML = `
       <table>
-        <thead><tr><th>${t('col_owner')}</th><th>${t('col_dog')}</th><th>${t('col_email')}</th><th>${t('col_phone')}</th><th>${t('col_payment')}</th><th>${t('col_status')}</th></tr></thead>
+        <thead><tr><th>${t('col_owner')}</th><th>${t('col_dog')}</th><th>${t('col_email')}</th><th>${t('col_phone')}</th><th>${t('col_payment')}</th><th>${t('col_status')}</th><th></th></tr></thead>
         <tbody>
           ${rows.map((r) => `
             <tr>
@@ -148,13 +148,33 @@ async function loadRoster(id) {
               <td>${r.phone}</td>
               <td>${r.payment_method === 'pay_at_class' ? t('payment_at_class') : t('payment_mobilepay')}</td>
               <td><span class="tag tag-${r.status}">${r.status}</span></td>
+              <td><button class="btn-delete" data-delete-reg="${r.id}" title="${t('delete_registration_btn')}">✕</button></td>
             </tr>
           `).join('')}
         </tbody>
       </table>
     `;
+
+    box.querySelectorAll('[data-delete-reg]').forEach((btn) => {
+      btn.addEventListener('click', () => deleteRegistration(btn.dataset.deleteReg, id));
+    });
   } catch (err) {
     box.innerHTML = `<p style="color:var(--clay); font-size:13px">${err.message}</p>`;
+  }
+}
+
+async function deleteRegistration(regId, classId) {
+  if (!window.confirm(t('confirm_delete_registration'))) return;
+
+  try {
+    const res = await fetch(`${API}/admin/registrations/${regId}`, { method: 'DELETE', headers: authHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || t('err_generic'));
+
+    await loadClasses(); // refresh confirmed counts shown on the class row
+    await loadRoster(classId); // loadClasses rebuilt the list, so re-open the roster view
+  } catch (err) {
+    window.alert(err.message);
   }
 }
 
