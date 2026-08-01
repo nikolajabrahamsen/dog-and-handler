@@ -5,10 +5,12 @@ const MAX_OLD_CLASSES_SHOWN = 10;
 
 function withComputed(row) {
   const spotsLeft = Math.max(0, row.max_participants - row.held_count);
+  const reservedCount = Math.max(0, row.held_count - row.confirmed_count);
   const expired = !!row.ends_at && new Date(row.ends_at) < new Date();
   return {
     ...row,
     spots_left: spotsLeft,
+    reserved_count: reservedCount,
     registration_open: !!row.is_open && spotsLeft > 0 && !expired,
     is_expired: expired,
   };

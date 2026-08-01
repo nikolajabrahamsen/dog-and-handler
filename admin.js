@@ -199,8 +199,12 @@ function classBlock(cls) {
   return `
     <div style="border-top:1px solid var(--line); padding: 14px 0;">
       <strong>${cls.title}</strong>
-      <div style="color:var(--bone-dim); font-size:13px">
-        ${cls.confirmed_count}/${cls.max_participants} ${t('confirmed_label')} ·
+      <div style="color:var(--bone-dim); font-size:13px; line-height:1.6;">
+        ${t('paid_count_label', { n: cls.paid_count })} ·
+        ${t('pay_at_class_count_label', { n: cls.pay_at_class_confirmed_count })} ·
+        ${t('reserved_count_label', { n: cls.reserved_count })} ·
+        ${t('empty_count_label', { n: cls.spots_left })}
+        (${cls.max_participants} ${t('total_label')})<br/>
         ${cls.registration_open ? t('open_label') : t('closed_label')} ·
         ${new Date(cls.starts_at).toLocaleString(getLang() === 'en' ? 'en-GB' : 'da-DK')}
       </div>
