@@ -3,10 +3,12 @@ const { requireAdmin } = require('../../lib/http');
 
 function withComputed(row) {
   const spotsLeft = Math.max(0, row.max_participants - row.held_count);
+  const expired = !!row.ends_at && new Date(row.ends_at) < new Date();
   return {
     ...row,
     spots_left: spotsLeft,
-    registration_open: !!row.is_open && spotsLeft > 0,
+    registration_open: !!row.is_open && spotsLeft > 0 && !expired,
+    is_expired: expired,
   };
 }
 
@@ -27,7 +29,7 @@ module.exports = async function handler(req, res) {
   if (req.method === 'PATCH') {
     if (!(await requireAdmin(req))) return res.status(401).json({ error: 'Unauthorized' });
 
-    const allowed = ['title', 'description', 'starts_at', 'weekday', 'location', 'max_participants', 'price_dkk', 'is_open'];
+    const allowed = ['title', 'description', 'starts_at', 'ends_at', 'weekday', 'location', 'max_participants', 'price_dkk', 'is_open'];
     const updates = {};
     for (const key of allowed) {
       if (req.body && req.body[key] !== undefined) updates[key] = req.body[key];

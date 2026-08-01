@@ -29,10 +29,12 @@ document.getElementById('createForm').addEventListener('submit', async (e) => {
   const msg = document.getElementById('createMsg');
   msg.hidden = true;
 
+  const endsAtVal = document.getElementById('ends_at').value;
   const body = {
     title: document.getElementById('title').value,
     description: document.getElementById('description').value,
     starts_at: new Date(document.getElementById('starts_at').value).toISOString(),
+    ends_at: endsAtVal ? new Date(endsAtVal).toISOString() : null,
     weekday: document.getElementById('weekday').value,
     location: document.getElementById('location').value,
     max_participants: Number(document.getElementById('max_participants').value),
@@ -63,35 +65,38 @@ async function loadClasses() {
     const classes = await res.json();
     lastClasses = classes;
     renderClasses();
-
-    classes.forEach((cls) => {
-      const closeBtn = document.getElementById(`close-${cls.id}`);
-      const openBtn = document.getElementById(`open-${cls.id}`);
-      const rosterBtn = document.getElementById(`roster-${cls.id}`);
-      if (closeBtn) closeBtn.addEventListener('click', () => toggleOpen(cls.id, false));
-      if (openBtn) openBtn.addEventListener('click', () => toggleOpen(cls.id, true));
-      if (rosterBtn) rosterBtn.addEventListener('click', () => loadRoster(cls.id));
-    });
   } catch (err) {
     el.innerHTML = `<p style="color:var(--clay)">${t('load_error')}</p>`;
   }
 }
 
+function wireClassButtons(cls) {
+  const closeBtn = document.getElementById(`close-${cls.id}`);
+  const openBtn = document.getElementById(`open-${cls.id}`);
+  const rosterBtn = document.getElementById(`roster-${cls.id}`);
+  const copyBtn = document.getElementById(`copy-${cls.id}`);
+  if (closeBtn) closeBtn.addEventListener('click', () => toggleOpen(cls.id, false));
+  if (openBtn) openBtn.addEventListener('click', () => toggleOpen(cls.id, true));
+  if (rosterBtn) rosterBtn.addEventListener('click', () => loadRoster(cls.id));
+  if (copyBtn) copyBtn.addEventListener('click', () => copyClass(cls));
+}
+
 function renderClasses() {
-  const el = document.getElementById('classesList');
-  if (!lastClasses.length) {
-    el.innerHTML = `<p style="color:var(--bone-dim)">${t('no_classes_yet')}</p>`;
-    return;
-  }
-  el.innerHTML = lastClasses.map(classBlock).join('');
-  lastClasses.forEach((cls) => {
-    const closeBtn = document.getElementById(`close-${cls.id}`);
-    const openBtn = document.getElementById(`open-${cls.id}`);
-    const rosterBtn = document.getElementById(`roster-${cls.id}`);
-    if (closeBtn) closeBtn.addEventListener('click', () => toggleOpen(cls.id, false));
-    if (openBtn) openBtn.addEventListener('click', () => toggleOpen(cls.id, true));
-    if (rosterBtn) rosterBtn.addEventListener('click', () => loadRoster(cls.id));
-  });
+  const currentEl = document.getElementById('classesList');
+  const oldEl = document.getElementById('oldClassesList');
+  const oldHeading = document.getElementById('oldClassesHeading');
+
+  const current = lastClasses.filter((c) => !c.is_expired);
+  const old = lastClasses.filter((c) => c.is_expired);
+
+  currentEl.innerHTML = current.length
+    ? current.map(classBlock).join('')
+    : `<p style="color:var(--bone-dim)">${t('no_classes_yet')}</p>`;
+  current.forEach(wireClassButtons);
+
+  oldHeading.hidden = old.length === 0;
+  oldEl.innerHTML = old.map(classBlock).join('');
+  old.forEach(wireClassButtons);
 }
 
 function classBlock(cls) {
@@ -103,15 +108,34 @@ function classBlock(cls) {
         ${cls.registration_open ? t('open_label') : t('closed_label')} ·
         ${new Date(cls.starts_at).toLocaleString(getLang() === 'en' ? 'en-GB' : 'da-DK')}
       </div>
-      <div style="margin-top:8px; display:flex; gap:8px;">
-        ${cls.is_open
-          ? `<button class="btn btn-secondary" id="close-${cls.id}">${t('close_manually_btn')}</button>`
-          : `<button class="btn btn-secondary" id="open-${cls.id}">${t('reopen_btn')}</button>`}
+      <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+        ${!cls.is_expired
+          ? (cls.is_open
+              ? `<button class="btn btn-secondary" id="close-${cls.id}">${t('close_manually_btn')}</button>`
+              : `<button class="btn btn-secondary" id="open-${cls.id}">${t('reopen_btn')}</button>`)
+          : ''}
         <button class="btn btn-secondary" id="roster-${cls.id}">${t('view_roster_btn')}</button>
+        <button class="btn btn-secondary" id="copy-${cls.id}">${t('copy_class_btn')}</button>
       </div>
       <div id="rosterBox-${cls.id}"></div>
     </div>
   `;
+}
+
+// Pre-fills the "Create a class" form with everything except the dates,
+// so the admin just picks new start/end dates and submits.
+function copyClass(cls) {
+  document.getElementById('title').value = cls.title || '';
+  document.getElementById('description').value = cls.description || '';
+  document.getElementById('weekday').value = cls.weekday || '';
+  document.getElementById('location').value = cls.location || '';
+  document.getElementById('max_participants').value = cls.max_participants ?? '';
+  document.getElementById('price_dkk').value = cls.price_dkk ?? '';
+  document.getElementById('starts_at').value = '';
+  document.getElementById('ends_at').value = '';
+
+  document.getElementById('createClassCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('starts_at').focus();
 }
 
 async function toggleOpen(id, isOpen) {

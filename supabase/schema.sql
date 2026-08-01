@@ -7,6 +7,7 @@ create table if not exists classes (
   title text not null,
   description text,
   starts_at timestamptz not null,
+  ends_at timestamptz,
   weekday text,
   location text,
   max_participants int not null,
@@ -80,6 +81,10 @@ begin
   end if;
 
   if not v_class.is_open then
+    raise exception 'class_closed';
+  end if;
+
+  if v_class.ends_at is not null and v_class.ends_at < now() then
     raise exception 'class_closed';
   end if;
 

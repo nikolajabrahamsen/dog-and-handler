@@ -32,6 +32,14 @@
   }
   .btn-delete:hover { background: rgba(181,83,60,0.2); color: var(--clay); }
   .admin-logo { height: 34px; width: auto; border-radius: 4px; }
+  .old-classes-heading {
+    font-family: var(--font-display);
+    font-size: 15px;
+    color: var(--bone-dim);
+    margin: 24px 0 4px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
 </style>
 </head>
 <body>
@@ -49,7 +57,7 @@
     </div>
   </div>
 
-  <div class="admin-card">
+  <div class="admin-card" id="createClassCard">
     <h2 data-i18n="create_class_heading">Opret hold</h2>
     <form id="createForm">
       <label for="title" data-i18n="title_label">Titel</label>
@@ -64,24 +72,32 @@
           <input id="starts_at" type="datetime-local" required />
         </div>
         <div>
-          <label for="weekday" data-i18n="weekday_label">Ugedag (valgfrit)</label>
-          <input id="weekday" placeholder="fx tirsdage" />
+          <label for="ends_at" data-i18n="end_datetime_label">Slutdato (valgfrit)</label>
+          <input id="ends_at" type="datetime-local" />
         </div>
       </div>
 
       <div class="grid-2">
         <div>
+          <label for="weekday" data-i18n="weekday_label">Ugedag (valgfrit)</label>
+          <input id="weekday" placeholder="fx tirsdage" />
+        </div>
+        <div>
           <label for="location" data-i18n="location_label">Sted</label>
           <input id="location" />
         </div>
+      </div>
+
+      <div class="grid-2">
         <div>
           <label for="max_participants" data-i18n="max_participants_label">Maks. deltagere</label>
           <input id="max_participants" type="number" min="1" required />
         </div>
+        <div>
+          <label for="price_dkk" data-i18n="price_label">Pris (DKK)</label>
+          <input id="price_dkk" type="number" min="0" required />
+        </div>
       </div>
-
-      <label for="price_dkk" data-i18n="price_label">Pris (DKK)</label>
-      <input id="price_dkk" type="number" min="0" required />
 
       <div style="margin-top:16px">
         <button class="btn btn-primary" type="submit" data-i18n="create_class_btn">Opret hold</button>
@@ -112,6 +128,8 @@
   <div class="admin-card">
     <h2 data-i18n="classes_rosters_heading">Hold &amp; tilmeldte</h2>
     <div id="classesList" data-i18n="loading_msg">Indlæser…</div>
+    <h3 class="old-classes-heading" id="oldClassesHeading" data-i18n="old_classes_heading" hidden>Gamle hold (seneste 10)</h3>
+    <div id="oldClassesList"></div>
   </div>
 </div>
 
