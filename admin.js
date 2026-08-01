@@ -16,6 +16,19 @@ async function requireSession() {
   return data.session;
 }
 
+// The Supabase client automatically refreshes the access token in the
+// background before it expires (sessions last ~1 hour) - this keeps our
+// copy of it in sync, so long-open admin tabs (with the background
+// polling below) don't start failing with 401s once the original token
+// expires. Also catches being signed out from another tab/device.
+client.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT' || !session) {
+    window.location.href = '/login.html';
+    return;
+  }
+  accessToken = session.access_token;
+});
+
 function authHeaders() {
   return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` };
 }
