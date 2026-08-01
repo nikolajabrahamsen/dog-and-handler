@@ -131,6 +131,7 @@ function openAddParticipantModal(cls) {
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="apTitle">
         <h3 id="apTitle">${t('add_participant_heading')}</h3>
         <p class="sub">${escapeHtmlAdmin(cls.title)}</p>
+        <p class="field-note" style="margin:-10px 0 14px;">${t('add_participant_note')}</p>
 
         <form id="addParticipantForm">
           <div class="field">
@@ -143,11 +144,11 @@ function openAddParticipantModal(cls) {
           </div>
           <div class="field">
             <label for="apEmail">${t('field_email')}</label>
-            <input id="apEmail" type="email" required />
+            <input id="apEmail" type="email" />
           </div>
           <div class="field">
             <label for="apPhone">${t('field_phone')}</label>
-            <input id="apPhone" type="tel" required />
+            <input id="apPhone" type="tel" />
           </div>
 
           <div id="apMsg" class="form-error" hidden></div>
@@ -481,8 +482,8 @@ async function loadRoster(id) {
             <tr>
               <td>${r.owner_name}</td>
               <td>${r.dog_name || '—'}</td>
-              <td>${r.email}</td>
-              <td>${r.phone}</td>
+              <td>${r.email || '—'}</td>
+              <td>${r.phone || '—'}</td>
               <td>${r.payment_method === 'pay_at_class' ? t('payment_at_class') : r.payment_method === 'manual' ? t('payment_manual') : t('payment_mobilepay')}</td>
               <td><span class="tag tag-${r.status}">${r.status}</span></td>
               <td><button class="btn-delete" data-move-reg="${r.id}" title="${t('move_btn')}">⇄</button></td>

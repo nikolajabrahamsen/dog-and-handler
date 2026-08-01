@@ -25,8 +25,8 @@ create table if not exists registrations (
   class_id uuid not null references classes(id) on delete cascade,
   owner_name text not null,
   dog_name text,
-  email text not null,
-  phone text not null,
+  email text,
+  phone text,
   status text not null default 'pending'
     check (status in ('pending', 'confirmed', 'failed', 'cancelled', 'expired')),
   payment_method text not null default 'mobilepay'
@@ -181,8 +181,8 @@ create or replace function admin_add_registration(
   p_class_id uuid,
   p_owner_name text,
   p_dog_name text,
-  p_email text,
-  p_phone text
+  p_email text default null,
+  p_phone text default null
 ) returns registrations
 language plpgsql
 as $$
@@ -206,7 +206,7 @@ begin
   end if;
 
   insert into registrations (class_id, owner_name, dog_name, email, phone, status, payment_method, newsletter_opt_in)
-  values (p_class_id, p_owner_name, p_dog_name, p_email, p_phone, 'confirmed', 'manual', false)
+  values (p_class_id, p_owner_name, p_dog_name, nullif(p_email, ''), nullif(p_phone, ''), 'confirmed', 'manual', false)
   returning * into v_reg;
 
   if v_held + 1 >= v_class.max_participants then

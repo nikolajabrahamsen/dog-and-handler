@@ -17,8 +17,8 @@ module.exports = async function handler(req, res) {
 
   const { id: classId } = req.query;
   const { owner_name, dog_name, email, phone } = req.body || {};
-  if (!owner_name || !email || !phone) {
-    return res.status(400).json({ error: 'owner_name, email and phone are required' });
+  if (!owner_name) {
+    return res.status(400).json({ error: 'owner_name is required' });
   }
 
   const { data: reg, error } = await supabase
@@ -43,7 +43,7 @@ module.exports = async function handler(req, res) {
   }
 
   const { data: cls } = await supabase.from('classes').select('*').eq('id', classId).single();
-  if (cls) await sendRegistrationConfirmationEmail(reg, cls);
+  if (cls && reg.email) await sendRegistrationConfirmationEmail(reg, cls);
 
   return res.status(201).json(reg);
 };
