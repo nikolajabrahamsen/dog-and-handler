@@ -34,6 +34,7 @@
   .btn-danger { color: var(--clay); border-color: rgba(181,83,60,0.4); }
   .btn-danger:hover { background: rgba(181,83,60,0.15); }
   .admin-logo { height: 34px; width: auto; border-radius: 4px; }
+  .field-note { color: var(--bone-dim) !important; }
   .old-classes-heading {
     font-family: var(--font-display);
     font-size: 15px;
@@ -101,6 +102,7 @@
         <div>
           <label for="location_url" data-i18n="location_url_label">Link til kort (valgfrit)</label>
           <input id="location_url" type="url" placeholder="https://maps.app.goo.gl/..." />
+          <p class="field-note" data-i18n="location_url_note">Kort-link laves automatisk ud fra "Sted" (Google Maps, Apple Maps eller Android-kortvælger, afhængig af enhed). Udfyld kun dette for at bruge et bestemt link i stedet.</p>
         </div>
       </div>
 

@@ -101,10 +101,34 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function detectMapPlatform() {
+  const ua = navigator.userAgent || '';
+  if (/android/i.test(ua)) return 'android';
+  if (/iphone|ipad|ipod/i.test(ua)) return 'ios';
+  return 'other';
+}
+
+// If the admin set an explicit "Link til kort" it always wins (useful when
+// an address doesn't geocode well). Otherwise, build a link tailored to
+// the visitor's device:
+//  - Android: a geo: URI, which triggers the OS's native "open with"
+//    chooser (Google Maps, Waze, whatever's installed) - iOS has no
+//    equivalent OS-level chooser for websites, so this only applies here.
+//  - iOS: opens directly in Apple Maps.
+//  - Everything else (desktop etc.): Google Maps in the browser.
+function locationHref(cls) {
+  if (cls.location_url) return cls.location_url;
+  const query = encodeURIComponent(cls.location);
+  const platform = detectMapPlatform();
+  if (platform === 'android') return `geo:0,0?q=${query}`;
+  if (platform === 'ios') return `https://maps.apple.com/?q=${query}`;
+  return `https://www.google.com/maps/search/?api=1&query=${query}`;
+}
+
 function locationHtml(cls) {
   const label = escapeHtml(cls.location);
-  if (!cls.location_url) return label;
-  return `<a href="${escapeHtml(cls.location_url)}" target="_blank" rel="noopener" class="map-link">${label}</a>`;
+  const href = locationHref(cls);
+  return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener" class="map-link">${label}</a>`;
 }
 
 function openRegisterModal(classId, classes) {

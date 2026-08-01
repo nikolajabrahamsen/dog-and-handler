@@ -1,6 +1,7 @@
 const { supabase } = require('../../lib/supabase');
 const { sendEmail } = require('../../lib/email');
 const { unsubscribeUrl } = require('../../lib/unsubscribe');
+const { buildEmailMapUrl } = require('../../lib/mapLink');
 const { requestBaseUrl } = require('../../lib/http');
 
 const DATE_FORMAT = { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' };
@@ -74,7 +75,7 @@ module.exports = async function handler(req, res) {
           <strong>${escapeHtml(cls.title)}</strong><br/>
           <span style="color:#6b6650; font-size:14px;">
             Start: ${new Date(cls.starts_at).toLocaleString('da-DK', DATE_FORMAT)}
-            ${cls.location ? ` · ${cls.location_url ? `<a href="${escapeHtml(cls.location_url)}" style="color:#C89B3C;">${escapeHtml(cls.location)}</a>` : escapeHtml(cls.location)}` : ''}
+            ${cls.location ? ` · ${buildEmailMapUrl(cls) ? `<a href="${escapeHtml(buildEmailMapUrl(cls))}" style="color:#C89B3C;">${escapeHtml(cls.location)}</a>` : escapeHtml(cls.location)}` : ''}
              · ${formatDkk(cls.price_dkk)}
           </span>
         </div>
