@@ -35,6 +35,43 @@ function exitEditMode() {
 
 document.getElementById('cancelEditBtn').addEventListener('click', exitEditMode);
 
+document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('changePasswordMsg');
+  const btn = document.getElementById('changePasswordBtn');
+  msg.hidden = true;
+
+  const p1 = document.getElementById('newPassword').value;
+  const p2 = document.getElementById('newPassword2').value;
+
+  if (p1 !== p2) {
+    msg.textContent = t('passwords_dont_match');
+    msg.style.color = 'var(--clay)';
+    msg.hidden = false;
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = t('saving_btn');
+
+  const { error } = await client.auth.updateUser({ password: p1 });
+
+  btn.disabled = false;
+  btn.textContent = t('change_password_btn');
+
+  if (error) {
+    msg.textContent = error.message;
+    msg.style.color = 'var(--clay)';
+    msg.hidden = false;
+    return;
+  }
+
+  msg.textContent = t('password_changed_msg');
+  msg.style.color = 'var(--brass-bright)';
+  msg.hidden = false;
+  e.target.reset();
+});
+
 document.getElementById('createForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const msg = document.getElementById('createMsg');

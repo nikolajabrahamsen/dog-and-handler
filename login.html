@@ -39,11 +39,17 @@
     color: var(--bone);
     font-size: 14px;
   }
-  .login-card button {
-    width: 100%;
-    margin-top: 20px;
-  }
+  .login-card button { width: 100%; margin-top: 20px; }
   .login-error { color: var(--clay); font-size: 13px; margin-top: 12px; min-height: 1em; }
+  .login-success { color: var(--brass-bright); font-size: 13px; margin-top: 12px; min-height: 1em; }
+  .forgot-link {
+    background: none; border: none; color: var(--bone-dim); font-size: 13px;
+    text-decoration: underline; cursor: pointer; padding: 0; margin-top: 12px; width: auto;
+  }
+  .back-link {
+    background: none; border: none; color: var(--bone-dim); font-size: 13px;
+    text-decoration: underline; cursor: pointer; padding: 0; margin-top: 14px; width: auto;
+  }
 </style>
 </head>
 <body>
@@ -52,19 +58,38 @@
 <div class="login-wrap">
   <div class="login-card">
     <img src="/icons/logo.png" alt="Hund &amp; Handler" />
-    <h1 data-i18n="login_title">Admin-login</h1>
-    <p class="sub" data-i18n="login_sub">Log ind for at administrere Hund &amp; Handlers hold.</p>
 
-    <form id="loginForm">
-      <label for="email" data-i18n="email_label">E-mail</label>
-      <input id="email" type="email" required autocomplete="username" />
+    <div id="loginState">
+      <h1 data-i18n="login_title">Admin-login</h1>
+      <p class="sub" data-i18n="login_sub">Log ind for at administrere Hund &amp; Handlers hold.</p>
 
-      <label for="password" data-i18n="password_label">Adgangskode</label>
-      <input id="password" type="password" required autocomplete="current-password" />
+      <form id="loginForm">
+        <label for="email" data-i18n="email_label">E-mail</label>
+        <input id="email" type="email" required autocomplete="username" />
 
-      <button type="submit" class="btn btn-primary" id="loginBtn" data-i18n="sign_in_btn">Log ind</button>
-      <div class="login-error" id="loginError"></div>
-    </form>
+        <label for="password" data-i18n="password_label">Adgangskode</label>
+        <input id="password" type="password" required autocomplete="current-password" />
+
+        <button type="submit" class="btn btn-primary" id="loginBtn" data-i18n="sign_in_btn">Log ind</button>
+        <div class="login-error" id="loginError"></div>
+      </form>
+      <button type="button" class="forgot-link" id="forgotLink" data-i18n="forgot_password_link">Glemt adgangskode?</button>
+    </div>
+
+    <div id="forgotState" hidden>
+      <h1 data-i18n="forgot_password_title">Nulstil adgangskode</h1>
+      <p class="sub" data-i18n="forgot_password_sub">Indtast din e-mail, så sender vi dig et link til at vælge en ny adgangskode.</p>
+
+      <form id="forgotForm">
+        <label for="forgotEmail" data-i18n="email_label">E-mail</label>
+        <input id="forgotEmail" type="email" required autocomplete="username" />
+
+        <button type="submit" class="btn btn-primary" id="forgotBtn" data-i18n="send_reset_link_btn">Send link</button>
+        <div class="login-error" id="forgotError"></div>
+        <div class="login-success" id="forgotSuccess"></div>
+      </form>
+      <button type="button" class="back-link" id="backToLoginLink" data-i18n="back_to_login_btn">Tilbage til login</button>
+    </div>
   </div>
 </div>
 
@@ -100,6 +125,41 @@
     }
 
     window.location.href = '/admin.html';
+  });
+
+  document.getElementById('forgotLink').addEventListener('click', () => {
+    document.getElementById('loginState').hidden = true;
+    document.getElementById('forgotState').hidden = false;
+  });
+
+  document.getElementById('backToLoginLink').addEventListener('click', () => {
+    document.getElementById('forgotState').hidden = true;
+    document.getElementById('loginState').hidden = false;
+  });
+
+  document.getElementById('forgotForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('forgotBtn');
+    const errorEl = document.getElementById('forgotError');
+    const successEl = document.getElementById('forgotSuccess');
+    errorEl.textContent = '';
+    successEl.textContent = '';
+    btn.disabled = true;
+    btn.textContent = t('sending_btn');
+
+    const email = document.getElementById('forgotEmail').value;
+
+    const { error } = await client.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/accept-invite.html`,
+    });
+
+    btn.disabled = false;
+    btn.textContent = t('send_reset_link_btn');
+
+    // Always show success, even on error - avoids leaking which emails
+    // have an account.
+    successEl.textContent = t('reset_link_sent_msg');
+    document.getElementById('forgotForm').reset();
   });
 </script>
 </body>
