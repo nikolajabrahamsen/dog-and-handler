@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hund-og-handler-v2';
+const CACHE_NAME = 'hund-og-handler-v3';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -30,18 +30,18 @@ self.addEventListener('fetch', (event) => {
   // Never cache API calls - class availability must always be fresh.
   if (url.pathname.startsWith('/api/')) return;
 
+  // Network-first: always try to get the latest version first, so a new
+  // deploy shows up on the very next reload. Only fall back to the
+  // cached version if the network request fails (e.g. actually offline).
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request)
-        .then((networkResponse) => {
-          if (event.request.method === 'GET' && networkResponse.ok) {
-            const clone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return networkResponse;
-        })
-        .catch(() => cached);
-      return cached || fetchPromise;
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (event.request.method === 'GET' && networkResponse.ok) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return networkResponse;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
