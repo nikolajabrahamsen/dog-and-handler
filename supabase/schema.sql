@@ -46,6 +46,15 @@ create index if not exists idx_reg_status on registrations(status);
 -- below if you change it.
 -- Live availability per class. "held_count" = confirmed + still-active
 -- pending holds; used to decide if a class is full.
+--
+-- IMPORTANT: if you ever add a new column to the classes table, this
+-- view's `select c.*` will NOT automatically pick it up - Postgres
+-- freezes a view's column list at CREATE time. You'll need to refresh
+-- it with DROP VIEW + CREATE VIEW (not just "create or replace" - that
+-- only allows appending columns at the very end, and it can't handle a
+-- new table column landing before the aggregate columns below, which is
+-- what happens here). See supabase/migration-8-refresh-view.sql for the
+-- exact pattern to copy.
 create or replace view class_availability as
 select
   c.*,

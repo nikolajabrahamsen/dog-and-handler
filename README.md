@@ -54,9 +54,14 @@ these files for a higher-resolution version any time.
      order: `supabase/migration-2-pay-at-class.sql`,
      `supabase/migration-3-newsletter.sql`,
      `supabase/migration-4-end-date.sql`,
-     `supabase/migration-5-payment-breakdown.sql`, and
-     `supabase/migration-6-release-admin-move.sql` — each only adds new
-     columns and functions, without touching existing data.
+     `supabase/migration-5-payment-breakdown.sql`,
+     `supabase/migration-6-release-admin-move.sql`,
+     `supabase/migration-7-location-link.sql`, and
+     `supabase/migration-8-refresh-view.sql` — each only adds new columns
+     and functions, without touching existing data. Migration 8 is
+     important even though it doesn't add anything new itself - it
+     refreshes a view that otherwise silently hides columns added by
+     migrations 6 and 7 (see the comment in that file for why).
 2. Grab your **Project URL** and **Secret key** (Project Settings → API →
    API Keys — on newer Supabase projects this replaces the old
    `service_role` key; it works as a drop-in equivalent). This is a
@@ -224,7 +229,7 @@ lib/
   http.js                     Supabase-Auth admin check / base-url helper
 supabase/
   schema.sql                   run once in the Supabase SQL editor (fresh installs)
-  migration-2 .. migration-6     run these instead if you already had an
+  migration-2 .. migration-8     run these instead if you already had an
                                     older schema, in numeric order
 index.html, login.html, admin.html, payment-return.html, accept-invite.html   pages
 app.js, admin.js                                             page logic
