@@ -46,6 +46,16 @@ module.exports = async function handler(req, res) {
     return res.status(200).json(withComputed(data));
   }
 
-  res.setHeader('Allow', 'GET, PATCH');
+  if (req.method === 'DELETE') {
+    if (!(await requireAdmin(req))) return res.status(401).json({ error: 'Unauthorized' });
+
+    // Registrations for this class are removed too (foreign key cascade in
+    // supabase/schema.sql) - the frontend warns about this before calling.
+    const { error } = await supabase.from('classes').delete().eq('id', id);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(200).json({ deleted: true });
+  }
+
+  res.setHeader('Allow', 'GET, PATCH, DELETE');
   return res.status(405).json({ error: 'Method not allowed' });
 };

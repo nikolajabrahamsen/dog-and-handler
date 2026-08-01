@@ -3,6 +3,7 @@ const client = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.publis
 
 let accessToken = null;
 let lastClasses = [];
+let editingClassId = null;
 
 async function requireSession() {
   const { data } = await client.auth.getSession();
@@ -24,6 +25,16 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   window.location.href = '/login.html';
 });
 
+function exitEditMode() {
+  editingClassId = null;
+  document.getElementById('createFormHeading').textContent = t('create_class_heading');
+  document.getElementById('createSubmitBtn').textContent = t('create_class_btn');
+  document.getElementById('cancelEditBtn').hidden = true;
+  document.getElementById('createForm').reset();
+}
+
+document.getElementById('cancelEditBtn').addEventListener('click', exitEditMode);
+
 document.getElementById('createForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const msg = document.getElementById('createMsg');
@@ -41,15 +52,20 @@ document.getElementById('createForm').addEventListener('submit', async (e) => {
     price_dkk: Number(document.getElementById('price_dkk').value),
   };
 
+  const isEditing = !!editingClassId;
+  const url = isEditing ? `${API}/classes/${editingClassId}` : `${API}/classes`;
+  const method = isEditing ? 'PATCH' : 'POST';
+
   try {
-    const res = await fetch(`${API}/classes`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) });
+    const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || t('err_generic'));
 
-    msg.textContent = t('class_created_msg');
+    msg.textContent = isEditing ? t('class_updated_msg') : t('class_created_msg');
     msg.style.color = 'var(--brass-bright)';
     msg.hidden = false;
-    e.target.reset();
+    if (isEditing) exitEditMode();
+    else e.target.reset();
     loadClasses();
   } catch (err) {
     msg.textContent = err.message;
@@ -75,10 +91,14 @@ function wireClassButtons(cls) {
   const openBtn = document.getElementById(`open-${cls.id}`);
   const rosterBtn = document.getElementById(`roster-${cls.id}`);
   const copyBtn = document.getElementById(`copy-${cls.id}`);
+  const editBtn = document.getElementById(`edit-${cls.id}`);
+  const deleteBtn = document.getElementById(`delete-${cls.id}`);
   if (closeBtn) closeBtn.addEventListener('click', () => toggleOpen(cls.id, false));
   if (openBtn) openBtn.addEventListener('click', () => toggleOpen(cls.id, true));
   if (rosterBtn) rosterBtn.addEventListener('click', () => loadRoster(cls.id));
   if (copyBtn) copyBtn.addEventListener('click', () => copyClass(cls));
+  if (editBtn) editBtn.addEventListener('click', () => editClass(cls));
+  if (deleteBtn) deleteBtn.addEventListener('click', () => deleteClass(cls));
 }
 
 function renderClasses() {
@@ -116,10 +136,53 @@ function classBlock(cls) {
           : ''}
         <button class="btn btn-secondary" id="roster-${cls.id}">${t('view_roster_btn')}</button>
         <button class="btn btn-secondary" id="copy-${cls.id}">${t('copy_class_btn')}</button>
+        <button class="btn btn-secondary" id="edit-${cls.id}">${t('edit_class_btn')}</button>
+        <button class="btn btn-secondary btn-danger" id="delete-${cls.id}">${t('delete_class_btn')}</button>
       </div>
       <div id="rosterBox-${cls.id}"></div>
     </div>
   `;
+}
+
+function toDatetimeLocalValue(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// Pre-fills the form with everything, including the dates, and switches
+// the form into "save changes" mode instead of "create new".
+function editClass(cls) {
+  editingClassId = cls.id;
+  document.getElementById('title').value = cls.title || '';
+  document.getElementById('description').value = cls.description || '';
+  document.getElementById('weekday').value = cls.weekday || '';
+  document.getElementById('location').value = cls.location || '';
+  document.getElementById('max_participants').value = cls.max_participants ?? '';
+  document.getElementById('price_dkk').value = cls.price_dkk ?? '';
+  document.getElementById('starts_at').value = toDatetimeLocalValue(cls.starts_at);
+  document.getElementById('ends_at').value = toDatetimeLocalValue(cls.ends_at);
+
+  document.getElementById('createFormHeading').textContent = t('edit_class_heading');
+  document.getElementById('createSubmitBtn').textContent = t('save_changes_btn');
+  document.getElementById('cancelEditBtn').hidden = false;
+
+  document.getElementById('createClassCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function deleteClass(cls) {
+  if (!window.confirm(t('confirm_delete_class', { title: cls.title }))) return;
+
+  try {
+    const res = await fetch(`${API}/classes/${cls.id}`, { method: 'DELETE', headers: authHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || t('err_generic'));
+    if (editingClassId === cls.id) exitEditMode();
+    loadClasses();
+  } catch (err) {
+    window.alert(err.message);
+  }
 }
 
 // Pre-fills the "Create a class" form with everything except the dates,

@@ -31,6 +31,8 @@
     border-radius: 6px;
   }
   .btn-delete:hover { background: rgba(181,83,60,0.2); color: var(--clay); }
+  .btn-danger { color: var(--clay); border-color: rgba(181,83,60,0.4); }
+  .btn-danger:hover { background: rgba(181,83,60,0.15); }
   .admin-logo { height: 34px; width: auto; border-radius: 4px; }
   .old-classes-heading {
     font-family: var(--font-display);
@@ -58,7 +60,7 @@
   </div>
 
   <div class="admin-card" id="createClassCard">
-    <h2 data-i18n="create_class_heading">Opret hold</h2>
+    <h2 id="createFormHeading" data-i18n="create_class_heading">Opret hold</h2>
     <form id="createForm">
       <label for="title" data-i18n="title_label">Titel</label>
       <input id="title" required />
@@ -99,8 +101,9 @@
         </div>
       </div>
 
-      <div style="margin-top:16px">
-        <button class="btn btn-primary" type="submit" data-i18n="create_class_btn">Opret hold</button>
+      <div style="margin-top:16px; display:flex; gap:10px; align-items:center;">
+        <button class="btn btn-primary" type="submit" id="createSubmitBtn" data-i18n="create_class_btn">Opret hold</button>
+        <button class="btn btn-secondary" type="button" id="cancelEditBtn" data-i18n="cancel_edit_btn" hidden>Annullér redigering</button>
       </div>
       <div id="createMsg" class="form-error" style="color: var(--brass-bright)" hidden></div>
     </form>
