@@ -169,7 +169,7 @@ a { color: inherit; }
 
 .class-meta {
   color: var(--bone-dim);
-  font-size: 14px;
+  font-size: 16px;
   margin: 0;
 }
 .map-link { color: var(--brass-bright); text-decoration: underline; }

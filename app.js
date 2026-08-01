@@ -15,7 +15,7 @@ function dkkFormat(amount) {
 function formatDate(iso) {
   try {
     return new Date(iso).toLocaleDateString(currentLocale(), {
-      weekday: 'short',
+      weekday: 'long',
       day: 'numeric',
       month: 'short',
       hour: '2-digit',
