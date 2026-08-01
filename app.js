@@ -41,9 +41,11 @@ function translateApiError(message) {
 
 let lastClasses = [];
 
-async function loadClasses() {
+async function loadClasses(silent = false) {
   const listEl = document.getElementById('classList');
-  listEl.innerHTML = `<p style="color: var(--bone-dim)">${t('loading_classes')}</p>`;
+  if (!silent) {
+    listEl.innerHTML = `<p style="color: var(--bone-dim)">${t('loading_classes')}</p>`;
+  }
   try {
     const res = await fetch(`${API}/classes`);
     const classes = await res.json();
@@ -60,7 +62,7 @@ async function loadClasses() {
       btn.addEventListener('click', () => openRegisterModal(btn.dataset.register, classes));
     });
   } catch (err) {
-    listEl.innerHTML = `<div class="empty-state">${t('load_error')}</div>`;
+    if (!silent) listEl.innerHTML = `<div class="empty-state">${t('load_error')}</div>`;
     console.error(err);
   }
 }
@@ -251,6 +253,22 @@ window.addEventListener('langchange', () => {
 });
 
 loadClasses();
+
+// Keep the class list fresh without the person needing to manually
+// reload - important for a PWA someone leaves open on their phone.
+// Polling (not real-time push) is deliberate here: simple, no extra
+// infrastructure, and doesn't touch an open registration modal since it
+// only replaces the #classList contents.
+const POLL_INTERVAL_MS = 30_000;
+setInterval(() => loadClasses(true), POLL_INTERVAL_MS);
+
+// Also refresh immediately whenever they come back to the app/tab -
+// covers switching back from another app on their phone, or returning
+// to a backgrounded browser tab, without waiting for the next poll tick.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') loadClasses(true);
+});
+window.addEventListener('focus', () => loadClasses(true));
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
