@@ -52,7 +52,7 @@ module.exports = async function handler(req, res) {
     if (!admin) return res.status(401).json({ error: 'Unauthorized' });
 
     const {
-      title, description, starts_at, ends_at, weekday, location,
+      title, description, starts_at, ends_at, weekday, location, location_url,
       max_participants, price_dkk, release_at, announce_before_release,
     } = req.body || {};
     if (!title || !starts_at || !max_participants || price_dkk == null) {
@@ -62,7 +62,7 @@ module.exports = async function handler(req, res) {
     const { data, error } = await supabase
       .from('classes')
       .insert({
-        title, description, starts_at, ends_at: ends_at || null, weekday, location,
+        title, description, starts_at, ends_at: ends_at || null, weekday, location, location_url: location_url || null,
         max_participants, price_dkk,
         release_at: release_at || null,
         announce_before_release: !!announce_before_release && !!release_at,

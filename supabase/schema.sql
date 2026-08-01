@@ -10,6 +10,7 @@ create table if not exists classes (
   ends_at timestamptz,
   weekday text,
   location text,
+  location_url text,
   max_participants int not null,
   price_dkk int not null,
   is_open boolean not null default true,

@@ -74,7 +74,7 @@ module.exports = async function handler(req, res) {
           <strong>${escapeHtml(cls.title)}</strong><br/>
           <span style="color:#6b6650; font-size:14px;">
             Start: ${new Date(cls.starts_at).toLocaleString('da-DK', DATE_FORMAT)}
-            ${cls.location ? ` · ${escapeHtml(cls.location)}` : ''}
+            ${cls.location ? ` · ${cls.location_url ? `<a href="${escapeHtml(cls.location_url)}" style="color:#C89B3C;">${escapeHtml(cls.location)}</a>` : escapeHtml(cls.location)}` : ''}
              · ${formatDkk(cls.price_dkk)}
           </span>
         </div>

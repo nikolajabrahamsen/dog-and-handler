@@ -33,7 +33,7 @@ module.exports = async function handler(req, res) {
   if (req.method === 'PATCH') {
     if (!(await requireAdmin(req))) return res.status(401).json({ error: 'Unauthorized' });
 
-    const allowed = ['title', 'description', 'starts_at', 'ends_at', 'weekday', 'location', 'max_participants', 'price_dkk', 'is_open', 'release_at', 'announce_before_release'];
+    const allowed = ['title', 'description', 'starts_at', 'ends_at', 'weekday', 'location', 'location_url', 'max_participants', 'price_dkk', 'is_open', 'release_at', 'announce_before_release'];
     const updates = {};
     for (const key of allowed) {
       if (req.body && req.body[key] !== undefined) updates[key] = req.body[key];

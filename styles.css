@@ -172,6 +172,7 @@ a { color: inherit; }
   font-size: 14px;
   margin: 0;
 }
+.map-link { color: var(--brass-bright); text-decoration: underline; }
 
 .class-desc {
   color: var(--bone-dim);

@@ -74,7 +74,7 @@ function renderCard(cls) {
       <div class="class-top">
         <div>
           <h3 class="class-title">${escapeHtml(cls.title)}</h3>
-          <p class="class-meta">${cls.weekday ? escapeHtml(cls.weekday) + ' · ' : ''}${t('starts_label')} ${formatDate(cls.starts_at)}${cls.location ? ' · ' + escapeHtml(cls.location) : ''}</p>
+          <p class="class-meta">${t('starts_label')} ${formatDate(cls.starts_at)}${cls.location ? ' · ' + locationHtml(cls) : ''}</p>
         </div>
       </div>
       ${cls.description ? `<p class="class-desc">${escapeHtml(cls.description)}</p>` : ''}
@@ -97,6 +97,12 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str ?? '';
   return div.innerHTML;
+}
+
+function locationHtml(cls) {
+  const label = escapeHtml(cls.location);
+  if (!cls.location_url) return label;
+  return `<a href="${escapeHtml(cls.location_url)}" target="_blank" rel="noopener" class="map-link">${label}</a>`;
 }
 
 function openRegisterModal(classId, classes) {

@@ -271,8 +271,8 @@ document.getElementById('createForm').addEventListener('submit', async (e) => {
     ends_at: endsAtVal ? new Date(endsAtVal).toISOString() : null,
     release_at: releaseAtVal ? new Date(releaseAtVal).toISOString() : null,
     announce_before_release: document.getElementById('announce_before_release').checked,
-    weekday: document.getElementById('weekday').value,
     location: document.getElementById('location').value,
+    location_url: document.getElementById('location_url').value || null,
     max_participants: Number(document.getElementById('max_participants').value),
     price_dkk: Number(document.getElementById('price_dkk').value),
   };
@@ -302,7 +302,7 @@ document.getElementById('createForm').addEventListener('submit', async (e) => {
 async function loadClasses() {
   const el = document.getElementById('classesList');
   try {
-    const res = await fetch(`${API}/classes`);
+    const res = await fetch(`${API}/classes`, { headers: authHeaders() });
     const classes = await res.json();
     lastClasses = classes;
     renderClasses();
@@ -390,8 +390,8 @@ function editClass(cls) {
   editingClassId = cls.id;
   document.getElementById('title').value = cls.title || '';
   document.getElementById('description').value = cls.description || '';
-  document.getElementById('weekday').value = cls.weekday || '';
   document.getElementById('location').value = cls.location || '';
+  document.getElementById('location_url').value = cls.location_url || '';
   document.getElementById('max_participants').value = cls.max_participants ?? '';
   document.getElementById('price_dkk').value = cls.price_dkk ?? '';
   document.getElementById('starts_at').value = toDatetimeLocalValue(cls.starts_at);
@@ -425,8 +425,8 @@ async function deleteClass(cls) {
 function copyClass(cls) {
   document.getElementById('title').value = cls.title || '';
   document.getElementById('description').value = cls.description || '';
-  document.getElementById('weekday').value = cls.weekday || '';
   document.getElementById('location').value = cls.location || '';
+  document.getElementById('location_url').value = cls.location_url || '';
   document.getElementById('max_participants').value = cls.max_participants ?? '';
   document.getElementById('price_dkk').value = cls.price_dkk ?? '';
   document.getElementById('starts_at').value = '';
