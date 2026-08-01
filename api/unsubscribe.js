@@ -4,7 +4,7 @@ const { verifyUnsubscribeToken } = require('../lib/unsubscribe');
 function page(title, body) {
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>${title} — Dog &amp; Handler</title>
+<title>${title} — Hund &amp; Handler</title>
 <link rel="stylesheet" href="/styles.css" /></head>
 <body><div class="status-page"><div class="status-card">
 <div class="status-icon">🐾</div><h1>${title}</h1><p>${body}</p>

@@ -1,9 +1,10 @@
-const CACHE_NAME = 'dog-and-handler-v1';
+const CACHE_NAME = 'hund-og-handler-v2';
 const APP_SHELL = [
   '/',
   '/index.html',
   '/styles.css',
   '/app.js',
+  '/i18n.js',
   '/manifest.json',
 ];
 

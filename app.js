@@ -1,14 +1,20 @@
 const API = '/api';
 
-const dkkFormatter = new Intl.NumberFormat('da-DK', {
-  style: 'currency',
-  currency: 'DKK',
-  maximumFractionDigits: 0,
-});
+function currentLocale() {
+  return getLang() === 'en' ? 'en-GB' : 'da-DK';
+}
+
+function dkkFormat(amount) {
+  return new Intl.NumberFormat(currentLocale(), {
+    style: 'currency',
+    currency: 'DKK',
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
 
 function formatDate(iso) {
   try {
-    return new Date(iso).toLocaleDateString('en-GB', {
+    return new Date(iso).toLocaleDateString(currentLocale(), {
       weekday: 'short',
       day: 'numeric',
       month: 'short',
@@ -20,14 +26,31 @@ function formatDate(iso) {
   }
 }
 
+// Maps the (English) error strings the API returns to a translated message.
+// The API stays language-agnostic; only the frontend translates.
+function translateApiError(message) {
+  const map = {
+    'Class not found': 'err_class_not_found',
+    'Registration for this class is closed': 'err_class_closed',
+    'This class just filled up': 'err_class_full',
+    'Could not start MobilePay payment. Please try again.': 'err_mobilepay_failed',
+  };
+  const key = map[message];
+  return key ? t(key) : (message || t('err_generic'));
+}
+
+let lastClasses = [];
+
 async function loadClasses() {
   const listEl = document.getElementById('classList');
+  listEl.innerHTML = `<p style="color: var(--bone-dim)">${t('loading_classes')}</p>`;
   try {
     const res = await fetch(`${API}/classes`);
     const classes = await res.json();
+    lastClasses = classes;
 
     if (!classes.length) {
-      listEl.innerHTML = `<div class="empty-state">No classes are open yet — check back soon.</div>`;
+      listEl.innerHTML = `<div class="empty-state">${t('no_classes')}</div>`;
       return;
     }
 
@@ -37,7 +60,7 @@ async function loadClasses() {
       btn.addEventListener('click', () => openRegisterModal(btn.dataset.register, classes));
     });
   } catch (err) {
-    listEl.innerHTML = `<div class="empty-state">Couldn't load classes right now. Pull to refresh or try again shortly.</div>`;
+    listEl.innerHTML = `<div class="empty-state">${t('load_error')}</div>`;
     console.error(err);
   }
 }
@@ -51,19 +74,19 @@ function renderCard(cls) {
       <div class="class-top">
         <div>
           <h3 class="class-title">${escapeHtml(cls.title)}</h3>
-          <p class="class-meta">${cls.weekday ? escapeHtml(cls.weekday) + ' · ' : ''}Starts ${formatDate(cls.starts_at)}${cls.location ? ' · ' + escapeHtml(cls.location) : ''}</p>
+          <p class="class-meta">${cls.weekday ? escapeHtml(cls.weekday) + ' · ' : ''}${t('starts_label')} ${formatDate(cls.starts_at)}${cls.location ? ' · ' + escapeHtml(cls.location) : ''}</p>
         </div>
       </div>
       ${cls.description ? `<p class="class-desc">${escapeHtml(cls.description)}</p>` : ''}
       <div class="class-bottom">
-        <span class="price">${dkkFormatter.format(cls.price_dkk)}</span>
+        <span class="price">${dkkFormat(cls.price_dkk)}</span>
         <span class="spots ${lowSpots ? 'low' : ''}">
-          ${closed ? 'Class is full' : `${cls.spots_left} spot${cls.spots_left === 1 ? '' : 's'} left`}
+          ${closed ? t('class_full_label') : tPlural('spots_left', cls.spots_left)}
         </span>
         ${
           closed
-            ? `<button class="btn btn-disabled" disabled>Registration closed</button>`
-            : `<button class="btn btn-primary" data-register="${cls.id}">Register</button>`
+            ? `<button class="btn btn-disabled" disabled>${t('registration_closed_btn')}</button>`
+            : `<button class="btn btn-primary" data-register="${cls.id}">${t('register_btn')}</button>`
         }
       </div>
     </article>
@@ -85,52 +108,52 @@ function openRegisterModal(classId, classes) {
     <div class="modal-backdrop" id="backdrop">
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <h3 id="modalTitle">${escapeHtml(cls.title)}</h3>
-        <p class="sub">${dkkFormatter.format(cls.price_dkk)} · ${cls.spots_left} spot${cls.spots_left === 1 ? '' : 's'} left</p>
+        <p class="sub">${tPlural('modal_price_spots', cls.spots_left, { price: dkkFormat(cls.price_dkk) })}</p>
 
         <form id="regForm">
           <div class="field">
-            <label for="owner_name">Your name</label>
+            <label for="owner_name">${t('field_owner_name')}</label>
             <input id="owner_name" name="owner_name" required autocomplete="name" />
           </div>
           <div class="field">
-            <label for="dog_name">Dog's name</label>
+            <label for="dog_name">${t('field_dog_name')}</label>
             <input id="dog_name" name="dog_name" autocomplete="off" />
           </div>
           <div class="field">
-            <label for="email">Email</label>
+            <label for="email">${t('field_email')}</label>
             <input id="email" name="email" type="email" required autocomplete="email" />
           </div>
           <div class="field">
-            <label for="phone">Phone</label>
+            <label for="phone">${t('field_phone')}</label>
             <input id="phone" name="phone" type="tel" required autocomplete="tel" placeholder="+45 12 34 56 78" />
-            <p class="field-note" id="phoneNote">Used to link your MobilePay payment and reach you if needed.</p>
+            <p class="field-note" id="phoneNote">${t('phone_note_mobilepay')}</p>
           </div>
 
           <label class="checkbox-row">
             <input type="checkbox" id="newsletter_opt_in" name="newsletter_opt_in" />
-            <span>Send me news and updates about upcoming classes by email</span>
+            <span>${t('newsletter_label')}</span>
           </label>
 
           <fieldset class="payment-choice">
-            <legend>How will you pay?</legend>
+            <legend>${t('payment_legend')}</legend>
             <label class="radio-row">
               <input type="radio" name="payment_method" value="mobilepay" checked />
-              <span>Pay now with MobilePay</span>
+              <span>${t('pay_mobilepay_label')}</span>
             </label>
             <label class="radio-row">
               <input type="radio" name="payment_method" value="pay_at_class" />
-              <span>Pay at class</span>
+              <span>${t('pay_at_class_label')}</span>
             </label>
           </fieldset>
 
           <div id="formError" class="form-error" hidden></div>
 
           <div class="modal-actions">
-            <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
-            <button type="submit" class="btn btn-primary" id="payBtn">Register</button>
+            <button type="button" class="btn btn-secondary" id="cancelBtn">${t('cancel_btn')}</button>
+            <button type="submit" class="btn btn-primary" id="payBtn">${t('register_submit_btn')}</button>
           </div>
 
-          <p class="pay-note" id="payNote">You'll be taken to MobilePay to approve the payment. Your spot is only confirmed once the payment goes through.</p>
+          <p class="pay-note" id="payNote">${t('pay_note_mobilepay')}</p>
         </form>
       </div>
     </div>
@@ -147,13 +170,13 @@ function openRegisterModal(classId, classes) {
   document.querySelectorAll('input[name="payment_method"]').forEach((radio) => {
     radio.addEventListener('change', (e) => {
       if (e.target.value === 'pay_at_class') {
-        payNote.textContent = "Your spot is confirmed right away. Bring payment with you to your first class.";
-        payBtn.textContent = 'Confirm registration';
-        phoneNote.textContent = "In case we need to reach you about your class.";
+        payNote.textContent = t('pay_note_pay_at_class');
+        payBtn.textContent = t('confirm_submit_btn');
+        phoneNote.textContent = t('phone_note_pay_at_class');
       } else {
-        payNote.textContent = "You'll be taken to MobilePay to approve the payment. Your spot is only confirmed once the payment goes through.";
-        payBtn.textContent = 'Register';
-        phoneNote.textContent = 'Used to link your MobilePay payment and reach you if needed.';
+        payNote.textContent = t('pay_note_mobilepay');
+        payBtn.textContent = t('register_submit_btn');
+        phoneNote.textContent = t('phone_note_mobilepay');
       }
     });
   });
@@ -165,10 +188,10 @@ function openRegisterModal(classId, classes) {
 
     const formData = new FormData(e.target);
     const paymentMethod = formData.get('payment_method') || 'mobilepay';
-    const originalLabel = paymentMethod === 'pay_at_class' ? 'Confirm registration' : 'Register';
+    const originalLabel = paymentMethod === 'pay_at_class' ? t('confirm_submit_btn') : t('register_submit_btn');
 
     payBtn.disabled = true;
-    payBtn.textContent = paymentMethod === 'pay_at_class' ? 'Confirming…' : 'Starting payment…';
+    payBtn.textContent = paymentMethod === 'pay_at_class' ? t('confirming_btn') : t('starting_payment_btn');
 
     const payload = {
       class_id: cls.id,
@@ -189,7 +212,7 @@ function openRegisterModal(classId, classes) {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Something went wrong');
+        throw new Error(translateApiError(data.error));
       }
 
       // MobilePay -> their app to approve payment. Pay-at-class -> our own
@@ -207,6 +230,19 @@ function openRegisterModal(classId, classes) {
 function closeModal() {
   document.getElementById('modalRoot').innerHTML = '';
 }
+
+// Re-render class cards in the new language; close any open modal since
+// its text won't update in place.
+window.addEventListener('langchange', () => {
+  closeModal();
+  if (lastClasses.length) {
+    const listEl = document.getElementById('classList');
+    listEl.innerHTML = lastClasses.map(renderCard).join('');
+    listEl.querySelectorAll('[data-register]').forEach((btn) => {
+      btn.addEventListener('click', () => openRegisterModal(btn.dataset.register, lastClasses));
+    });
+  }
+});
 
 loadClasses();
 

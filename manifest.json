@@ -1,7 +1,8 @@
 {
-  "name": "Dog & Handler",
-  "short_name": "Dog & Handler",
-  "description": "Sign up for this month's dog training classes",
+  "name": "Hund & Handler",
+  "short_name": "Hund & Handler",
+  "description": "Tilmeld dig månedens hundetræningshold hos Hund & Handler Danmark",
+  "lang": "da",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

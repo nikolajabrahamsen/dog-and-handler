@@ -1,20 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="da">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Confirming your spot… — Dog &amp; Handler</title>
+<title>Hund &amp; Handler</title>
+<link rel="icon" href="/icons/favicon.png" />
 <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
+<div id="langSwitcher"></div>
+
 <div class="status-page">
   <div class="status-card" id="statusCard">
     <div class="status-icon">🐾</div>
-    <h1 id="statusTitle">Confirming your payment…</h1>
-    <p id="statusBody">Hang tight, this only takes a moment.</p>
+    <h1 id="statusTitle" data-i18n="confirming_title">Bekræfter din betaling…</h1>
+    <p id="statusBody" data-i18n="confirming_body">Et øjeblik, det tager ikke lang tid.</p>
   </div>
 </div>
 
+<script src="/i18n.js"></script>
 <script>
   const API = '/api';
   const params = new URLSearchParams(window.location.search);
@@ -24,10 +28,20 @@
   const bodyEl = document.getElementById('statusBody');
   const iconEl = document.querySelector('.status-icon');
 
+  function setStatus(iconTxt, titleKey, bodyKey) {
+    iconEl.textContent = iconTxt;
+    titleEl.removeAttribute('data-i18n');
+    bodyEl.removeAttribute('data-i18n');
+    titleEl.textContent = t(titleKey);
+    bodyEl.textContent = t(bodyKey);
+  }
+
+  let lastState = null;
+
   async function poll(attempt = 0) {
     if (!regId) {
-      titleEl.textContent = "We couldn't find that registration";
-      bodyEl.textContent = 'Please go back and try registering again.';
+      setStatus('⚠️', 'not_found_title', 'not_found_body');
+      lastState = ['not_found_title', 'not_found_body'];
       return;
     }
 
@@ -36,33 +50,39 @@
       const reg = await res.json();
 
       if (reg.status === 'confirmed') {
-        iconEl.textContent = '✅';
-        titleEl.textContent = "You're in!";
-        bodyEl.textContent = reg.payment_method === 'pay_at_class'
-          ? "Your spot is confirmed. Please bring payment with you to your first class."
-          : "Your spot is confirmed and we've sent a confirmation to your email.";
+        const bodyKey = reg.payment_method === 'pay_at_class' ? 'confirmed_body_pay_at_class' : 'confirmed_body_mobilepay';
+        setStatus('✅', 'confirmed_title', bodyKey);
+        lastState = ['confirmed_title', bodyKey, '✅'];
         return;
       }
 
       if (reg.status === 'failed' || reg.status === 'cancelled' || reg.status === 'expired') {
-        iconEl.textContent = '⚠️';
-        titleEl.textContent = 'Payment not completed';
-        bodyEl.textContent = 'Your registration was not confirmed. No payment was taken — feel free to try again.';
+        setStatus('⚠️', 'failed_title', 'failed_body');
+        lastState = ['failed_title', 'failed_body', '⚠️'];
         return;
       }
 
-      // Still pending - MobilePay's webhook may take a few seconds. Keep polling.
       if (attempt < 15) {
         setTimeout(() => poll(attempt + 1), 2000);
       } else {
-        titleEl.textContent = 'Still confirming…';
-        bodyEl.textContent = "This is taking longer than usual. We'll email you as soon as it's confirmed.";
+        setStatus('🐾', 'still_confirming_title', 'still_confirming_body');
+        lastState = ['still_confirming_title', 'still_confirming_body', '🐾'];
       }
     } catch (err) {
-      titleEl.textContent = 'Something went wrong';
-      bodyEl.textContent = 'Please check your email shortly, or contact us if you\'re unsure.';
+      setStatus('⚠️', 'generic_error_title', 'generic_error_body');
+      lastState = ['generic_error_title', 'generic_error_body', '⚠️'];
     }
   }
+
+  // If the language is switched after a status has already resolved,
+  // re-translate the shown message.
+  window.addEventListener('langchange', () => {
+    if (lastState) {
+      iconEl.textContent = lastState[2] || iconEl.textContent;
+      titleEl.textContent = t(lastState[0]);
+      bodyEl.textContent = t(lastState[1]);
+    }
+  });
 
   poll();
 </script>

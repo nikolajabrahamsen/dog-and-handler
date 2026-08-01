@@ -9,7 +9,7 @@ function buildHtml(messageHtml, unsubUrl) {
       ${messageHtml}
       <hr style="border: none; border-top: 1px solid #e0dccb; margin: 32px 0 16px;" />
       <p style="font-size: 12px; color: #8a8570;">
-        You're receiving this because you opted in to news from Dog &amp; Handler.
+        You're receiving this because you opted in to news from Hund &amp; Handler.
         <a href="${unsubUrl}" style="color:#8a8570;">Unsubscribe</a>
       </p>
     </div>

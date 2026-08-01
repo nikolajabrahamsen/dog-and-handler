@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="da">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Admin — Dog &amp; Handler</title>
+<title>Hund &amp; Handler — Admin</title>
+<link rel="icon" href="/icons/favicon.png" />
 <link rel="stylesheet" href="/styles.css" />
 <style>
   .admin-wrap { max-width: 720px; margin: 0 auto; padding: 40px 20px 80px; }
@@ -19,86 +20,93 @@
   .tag-confirmed { background: rgba(200,155,60,0.2); color: var(--brass-bright); }
   .tag-pending { background: rgba(255,255,255,0.1); color: var(--bone-dim); }
   .tag-failed, .tag-expired, .tag-cancelled { background: rgba(181,83,60,0.2); color: var(--clay); }
+  .admin-logo { height: 34px; width: auto; border-radius: 4px; }
 </style>
 </head>
 <body>
+<div id="langSwitcher"></div>
+
 <div class="admin-wrap">
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-    <h1 class="wordmark" style="font-size:32px; margin:0;">Admin</h1>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <img class="admin-logo" src="/icons/logo.png" alt="Hund &amp; Handler" />
+      <h1 class="wordmark" style="font-size:28px; margin:0;" data-i18n="admin_title">Admin</h1>
+    </div>
     <div style="text-align:right;">
       <div id="userEmail" style="font-size:13px; color:var(--bone-dim); margin-bottom:6px;"></div>
-      <button class="btn btn-secondary" id="logoutBtn">Log out</button>
+      <button class="btn btn-secondary" id="logoutBtn" data-i18n="logout_btn">Log ud</button>
     </div>
   </div>
 
   <div class="admin-card">
-    <h2>Create a class</h2>
+    <h2 data-i18n="create_class_heading">Opret hold</h2>
     <form id="createForm">
-      <label for="title">Title</label>
+      <label for="title" data-i18n="title_label">Titel</label>
       <input id="title" required />
 
-      <label for="description">Description</label>
+      <label for="description" data-i18n="description_label">Beskrivelse</label>
       <textarea id="description"></textarea>
 
       <div class="grid-2">
         <div>
-          <label for="starts_at">Start date &amp; time</label>
+          <label for="starts_at" data-i18n="start_datetime_label">Startdato og -tid</label>
           <input id="starts_at" type="datetime-local" required />
         </div>
         <div>
-          <label for="weekday">Weekday label (optional)</label>
-          <input id="weekday" placeholder="e.g. Tuesdays" />
+          <label for="weekday" data-i18n="weekday_label">Ugedag (valgfrit)</label>
+          <input id="weekday" placeholder="fx tirsdage" />
         </div>
       </div>
 
       <div class="grid-2">
         <div>
-          <label for="location">Location</label>
+          <label for="location" data-i18n="location_label">Sted</label>
           <input id="location" />
         </div>
         <div>
-          <label for="max_participants">Max participants</label>
+          <label for="max_participants" data-i18n="max_participants_label">Maks. deltagere</label>
           <input id="max_participants" type="number" min="1" required />
         </div>
       </div>
 
-      <label for="price_dkk">Price (DKK)</label>
+      <label for="price_dkk" data-i18n="price_label">Pris (DKK)</label>
       <input id="price_dkk" type="number" min="0" required />
 
       <div style="margin-top:16px">
-        <button class="btn btn-primary" type="submit">Create class</button>
+        <button class="btn btn-primary" type="submit" data-i18n="create_class_btn">Opret hold</button>
       </div>
       <div id="createMsg" class="form-error" style="color: var(--brass-bright)" hidden></div>
     </form>
   </div>
 
   <div class="admin-card">
-    <h2>Newsletter</h2>
+    <h2 data-i18n="newsletter_heading">Nyhedsbrev</h2>
     <p style="color: var(--bone-dim); font-size: 13px; margin-top:-4px;">
-      <span id="subscriberCount">Loading subscriber count…</span>
+      <span id="subscriberCount" data-i18n="loading_subscriber_count">Indlæser antal tilmeldte…</span>
     </p>
     <form id="newsletterForm">
-      <label for="nlSubject">Subject</label>
+      <label for="nlSubject" data-i18n="subject_label">Emne</label>
       <input id="nlSubject" required />
 
-      <label for="nlMessage">Message</label>
-      <textarea id="nlMessage" required style="min-height:140px;" placeholder="Write your update here. Separate paragraphs with a blank line."></textarea>
+      <label for="nlMessage" data-i18n="message_label">Besked</label>
+      <textarea id="nlMessage" required style="min-height:140px;"></textarea>
 
       <div style="margin-top:16px">
-        <button class="btn btn-primary" type="submit" id="nlSendBtn">Send to subscribers</button>
+        <button class="btn btn-primary" type="submit" id="nlSendBtn" data-i18n="send_newsletter_btn">Send til abonnenter</button>
       </div>
       <div id="nlMsg" class="form-error" style="color: var(--brass-bright)" hidden></div>
     </form>
   </div>
 
   <div class="admin-card">
-    <h2>Classes &amp; rosters</h2>
-    <div id="classesList">Loading…</div>
+    <h2 data-i18n="classes_rosters_heading">Hold &amp; tilmeldte</h2>
+    <div id="classesList" data-i18n="loading_msg">Indlæser…</div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="/supabase-config.js"></script>
+<script src="/i18n.js"></script>
 <script src="/admin.js"></script>
 </body>
 </html>

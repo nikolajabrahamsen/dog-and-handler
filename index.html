@@ -1,22 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="da">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Dog &amp; Handler</title>
-<meta name="description" content="Sign up for this month's dog training classes" />
+<title>Hund &amp; Handler</title>
+<meta name="description" content="Tilmeld dig månedens hundetræningshold" />
 <link rel="manifest" href="/manifest.json" />
 <meta name="theme-color" content="#1F2A20" />
+<link rel="icon" href="/icons/favicon.png" />
 <link rel="apple-touch-icon" href="/icons/icon-192.png" />
 <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
 
+<div id="langSwitcher"></div>
+
 <div class="wrap">
   <header class="hero">
-    <span class="eyebrow">New classes every month</span>
-    <h1 class="wordmark">Dog <span class="accent">&amp;</span> Handler</h1>
-    <p>Pick a class, register your dog, and pay securely with MobilePay. Your spot is confirmed the moment payment goes through.</p>
+    <img class="hero-logo" src="/icons/logo.png" alt="Hund &amp; Handler" />
+    <span class="eyebrow" data-i18n="tagline">Nye hold hver måned</span>
+    <p data-i18n="hero_intro">Vælg et hold, tilmeld din hund, og betal sikkert med MobilePay eller ved fremmøde. Din plads er bekræftet, så snart betalingen er på plads.</p>
   </header>
 
   <div class="lead-line" aria-hidden="true">
@@ -27,15 +30,16 @@
   </div>
 
   <main>
-    <h2 class="section-title">This month's classes</h2>
+    <h2 class="section-title" data-i18n="classes_heading">Månedens hold</h2>
     <div id="classList" class="class-grid" aria-live="polite">
-      <p style="color: var(--bone-dim)">Loading classes…</p>
+      <p style="color: var(--bone-dim)" data-i18n="loading_classes">Indlæser hold…</p>
     </div>
   </main>
 </div>
 
 <div id="modalRoot"></div>
 
+<script src="/i18n.js"></script>
 <script src="/app.js"></script>
 </body>
 </html>

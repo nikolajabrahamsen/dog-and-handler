@@ -1,4 +1,4 @@
-# Dog & Handler — Dog Training Class Registration PWA
+# Hund & Handler Danmark — Dog Training Class Registration PWA
 
 Built for your existing **Supabase + Vercel + GitHub** stack. Customers
 browse open classes, register, and pay either via **Vipps MobilePay** or
@@ -14,6 +14,17 @@ only accounts you create yourself can sign in and manage classes.
 Customers can also opt in to a newsletter when they register, and the
 admin panel has a simple tool to email everyone who opted in, with a
 one-click unsubscribe link in every email.
+
+**Language**: the whole site (customer pages and admin) defaults to
+Danish, with a DA / EN toggle in the top-right corner of every page. The
+choice is remembered per browser. This only translates the app's own
+interface text — class titles/descriptions you type in as admin are
+shown as-written in whatever language you enter them.
+
+**Branding**: your logo is in `icons/logo.png`, used in the site header,
+login page, and admin page, and the app icons (`icons/icon-192.png`,
+`icons/icon-512.png`, `icons/favicon.png`) were generated from it. Swap
+these files for a higher-resolution version any time.
 
 ## How it works
 
@@ -87,7 +98,7 @@ one-click unsubscribe link in every email.
    you own (Resend walks you through adding a couple of DNS records).
 2. Create an **API key** (Resend dashboard → API Keys).
 3. You'll add `RESEND_API_KEY`, `EMAIL_FROM` (e.g.
-   `Dog & Handler <news@yourdomain.com>`, using your verified domain),
+   `Hund & Handler <news@yourdomain.com>`, using your verified domain),
    and `NEWSLETTER_UNSUBSCRIBE_SECRET` (any long random string you make
    up) to Vercel's environment variables in the next step.
 

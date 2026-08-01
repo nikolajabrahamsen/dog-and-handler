@@ -2,6 +2,7 @@ const API = '/api';
 const client = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.publishableKey);
 
 let accessToken = null;
+let lastClasses = [];
 
 async function requireSession() {
   const { data } = await client.auth.getSession();
@@ -41,9 +42,9 @@ document.getElementById('createForm').addEventListener('submit', async (e) => {
   try {
     const res = await fetch(`${API}/classes`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to create class');
+    if (!res.ok) throw new Error(data.error || t('err_generic'));
 
-    msg.textContent = 'Class created ✓';
+    msg.textContent = t('class_created_msg');
     msg.style.color = 'var(--brass-bright)';
     msg.hidden = false;
     e.target.reset();
@@ -60,11 +61,8 @@ async function loadClasses() {
   try {
     const res = await fetch(`${API}/classes`);
     const classes = await res.json();
-    if (!classes.length) {
-      el.innerHTML = '<p style="color:var(--bone-dim)">No classes yet.</p>';
-      return;
-    }
-    el.innerHTML = classes.map(classBlock).join('');
+    lastClasses = classes;
+    renderClasses();
 
     classes.forEach((cls) => {
       const closeBtn = document.getElementById(`close-${cls.id}`);
@@ -75,8 +73,25 @@ async function loadClasses() {
       if (rosterBtn) rosterBtn.addEventListener('click', () => loadRoster(cls.id));
     });
   } catch (err) {
-    el.innerHTML = '<p style="color:var(--clay)">Could not load classes.</p>';
+    el.innerHTML = `<p style="color:var(--clay)">${t('load_error')}</p>`;
   }
+}
+
+function renderClasses() {
+  const el = document.getElementById('classesList');
+  if (!lastClasses.length) {
+    el.innerHTML = `<p style="color:var(--bone-dim)">${t('no_classes_yet')}</p>`;
+    return;
+  }
+  el.innerHTML = lastClasses.map(classBlock).join('');
+  lastClasses.forEach((cls) => {
+    const closeBtn = document.getElementById(`close-${cls.id}`);
+    const openBtn = document.getElementById(`open-${cls.id}`);
+    const rosterBtn = document.getElementById(`roster-${cls.id}`);
+    if (closeBtn) closeBtn.addEventListener('click', () => toggleOpen(cls.id, false));
+    if (openBtn) openBtn.addEventListener('click', () => toggleOpen(cls.id, true));
+    if (rosterBtn) rosterBtn.addEventListener('click', () => loadRoster(cls.id));
+  });
 }
 
 function classBlock(cls) {
@@ -84,15 +99,15 @@ function classBlock(cls) {
     <div style="border-top:1px solid var(--line); padding: 14px 0;">
       <strong>${cls.title}</strong>
       <div style="color:var(--bone-dim); font-size:13px">
-        ${cls.confirmed_count}/${cls.max_participants} confirmed ·
-        ${cls.registration_open ? 'open' : 'closed'} ·
-        ${new Date(cls.starts_at).toLocaleString()}
+        ${cls.confirmed_count}/${cls.max_participants} ${t('confirmed_label')} ·
+        ${cls.registration_open ? t('open_label') : t('closed_label')} ·
+        ${new Date(cls.starts_at).toLocaleString(getLang() === 'en' ? 'en-GB' : 'da-DK')}
       </div>
       <div style="margin-top:8px; display:flex; gap:8px;">
         ${cls.is_open
-          ? `<button class="btn btn-secondary" id="close-${cls.id}">Close manually</button>`
-          : `<button class="btn btn-secondary" id="open-${cls.id}">Reopen</button>`}
-        <button class="btn btn-secondary" id="roster-${cls.id}">View roster</button>
+          ? `<button class="btn btn-secondary" id="close-${cls.id}">${t('close_manually_btn')}</button>`
+          : `<button class="btn btn-secondary" id="open-${cls.id}">${t('reopen_btn')}</button>`}
+        <button class="btn btn-secondary" id="roster-${cls.id}">${t('view_roster_btn')}</button>
       </div>
       <div id="rosterBox-${cls.id}"></div>
     </div>
@@ -110,20 +125,20 @@ async function toggleOpen(id, isOpen) {
 
 async function loadRoster(id) {
   const box = document.getElementById(`rosterBox-${id}`);
-  box.innerHTML = 'Loading roster…';
+  box.innerHTML = t('loading_roster');
   try {
     const res = await fetch(`${API}/classes/${id}/registrations`, { headers: authHeaders() });
     const rows = await res.json();
-    if (!res.ok) throw new Error(rows.error || 'Failed to load');
+    if (!res.ok) throw new Error(rows.error || t('err_generic'));
 
     if (!rows.length) {
-      box.innerHTML = '<p style="color:var(--bone-dim); font-size:13px">No registrations yet.</p>';
+      box.innerHTML = `<p style="color:var(--bone-dim); font-size:13px">${t('no_registrations_yet')}</p>`;
       return;
     }
 
     box.innerHTML = `
       <table>
-        <thead><tr><th>Owner</th><th>Dog</th><th>Email</th><th>Phone</th><th>Payment</th><th>Status</th></tr></thead>
+        <thead><tr><th>${t('col_owner')}</th><th>${t('col_dog')}</th><th>${t('col_email')}</th><th>${t('col_phone')}</th><th>${t('col_payment')}</th><th>${t('col_status')}</th></tr></thead>
         <tbody>
           ${rows.map((r) => `
             <tr>
@@ -131,7 +146,7 @@ async function loadRoster(id) {
               <td>${r.dog_name || '—'}</td>
               <td>${r.email}</td>
               <td>${r.phone}</td>
-              <td>${r.payment_method === 'pay_at_class' ? 'At class' : 'MobilePay'}</td>
+              <td>${r.payment_method === 'pay_at_class' ? t('payment_at_class') : t('payment_mobilepay')}</td>
               <td><span class="tag tag-${r.status}">${r.status}</span></td>
             </tr>
           `).join('')}
@@ -148,10 +163,12 @@ async function loadSubscriberCount() {
   try {
     const res = await fetch(`${API}/admin/newsletter`, { headers: authHeaders() });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to load');
-    el.textContent = `${data.count} subscriber${data.count === 1 ? '' : 's'} opted in to news emails.`;
+    if (!res.ok) throw new Error(data.error || t('err_generic'));
+    el.removeAttribute('data-i18n');
+    el.textContent = t('subscriber_count_msg', { n: data.count });
   } catch (err) {
-    el.textContent = 'Could not load subscriber count.';
+    el.removeAttribute('data-i18n');
+    el.textContent = t('load_error');
   }
 }
 
@@ -161,7 +178,7 @@ document.getElementById('newsletterForm').addEventListener('submit', async (e) =
   const btn = document.getElementById('nlSendBtn');
   msg.hidden = true;
   btn.disabled = true;
-  btn.textContent = 'Sending…';
+  btn.textContent = t('sending_btn');
 
   const body = {
     subject: document.getElementById('nlSubject').value,
@@ -171,9 +188,9 @@ document.getElementById('newsletterForm').addEventListener('submit', async (e) =
   try {
     const res = await fetch(`${API}/admin/newsletter`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to send');
+    if (!res.ok) throw new Error(data.error || t('err_generic'));
 
-    msg.textContent = data.sent != null ? `Sent to ${data.sent} subscriber${data.sent === 1 ? '' : 's'}${data.failed ? ` (${data.failed} failed)` : ''}.` : data.message;
+    msg.textContent = data.sent != null ? `${data.sent} / ${data.sent + data.failed}` : data.message;
     msg.style.color = data.failed ? 'var(--clay)' : 'var(--brass-bright)';
     msg.hidden = false;
     e.target.reset();
@@ -183,8 +200,13 @@ document.getElementById('newsletterForm').addEventListener('submit', async (e) =
     msg.hidden = false;
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Send to subscribers';
+    btn.textContent = t('send_newsletter_btn');
   }
+});
+
+window.addEventListener('langchange', () => {
+  renderClasses();
+  loadSubscriberCount();
 });
 
 (async function init() {
