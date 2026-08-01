@@ -35,7 +35,7 @@ function exitEditMode() {
 
 document.getElementById('cancelEditBtn').addEventListener('click', exitEditMode);
 
-function closeChangePasswordModal() {
+function closeModal() {
   document.getElementById('modalRoot').innerHTML = '';
 }
 
@@ -67,9 +67,9 @@ function openChangePasswordModal() {
     </div>
   `;
 
-  document.getElementById('cpCancelBtn').addEventListener('click', closeChangePasswordModal);
+  document.getElementById('cpCancelBtn').addEventListener('click', closeModal);
   document.getElementById('cpBackdrop').addEventListener('click', (e) => {
-    if (e.target.id === 'cpBackdrop') closeChangePasswordModal();
+    if (e.target.id === 'cpBackdrop') closeModal();
   });
 
   document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
@@ -105,11 +105,157 @@ function openChangePasswordModal() {
     msg.textContent = t('password_changed_msg');
     msg.hidden = false;
     btn.disabled = true;
-    setTimeout(closeChangePasswordModal, 1100);
+    setTimeout(closeModal, 1100);
   });
 }
 
 document.getElementById('changePasswordOpenBtn').addEventListener('click', openChangePasswordModal);
+
+function openAddParticipantModal(cls) {
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="modal-backdrop" id="apBackdrop">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="apTitle">
+        <h3 id="apTitle">${t('add_participant_heading')}</h3>
+        <p class="sub">${escapeHtmlAdmin(cls.title)}</p>
+
+        <form id="addParticipantForm">
+          <div class="field">
+            <label for="apOwnerName">${t('field_owner_name')}</label>
+            <input id="apOwnerName" required />
+          </div>
+          <div class="field">
+            <label for="apDogName">${t('field_dog_name')}</label>
+            <input id="apDogName" />
+          </div>
+          <div class="field">
+            <label for="apEmail">${t('field_email')}</label>
+            <input id="apEmail" type="email" required />
+          </div>
+          <div class="field">
+            <label for="apPhone">${t('field_phone')}</label>
+            <input id="apPhone" type="tel" required />
+          </div>
+
+          <div id="apMsg" class="form-error" hidden></div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="apCancelBtn">${t('cancel_btn')}</button>
+            <button type="submit" class="btn btn-primary" id="apSubmitBtn">${t('add_participant_btn')}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('apCancelBtn').addEventListener('click', closeModal);
+  document.getElementById('apBackdrop').addEventListener('click', (e) => {
+    if (e.target.id === 'apBackdrop') closeModal();
+  });
+
+  document.getElementById('addParticipantForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('apMsg');
+    const btn = document.getElementById('apSubmitBtn');
+    msg.hidden = true;
+    btn.disabled = true;
+    btn.textContent = t('saving_btn');
+
+    const body = {
+      owner_name: document.getElementById('apOwnerName').value,
+      dog_name: document.getElementById('apDogName').value,
+      email: document.getElementById('apEmail').value,
+      phone: document.getElementById('apPhone').value,
+    };
+
+    try {
+      const res = await fetch(`${API}/admin/classes/${cls.id}/participants`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || t('err_generic'));
+
+      closeModal();
+      await loadClasses();
+      await loadRoster(cls.id);
+    } catch (err) {
+      msg.textContent = err.message;
+      msg.hidden = false;
+      btn.disabled = false;
+      btn.textContent = t('add_participant_btn');
+    }
+  });
+}
+
+function openMoveModal(reg, currentClassId) {
+  const otherClasses = lastClasses.filter((c) => c.id !== currentClassId && !c.is_expired);
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="modal-backdrop" id="mvBackdrop">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mvTitle">
+        <h3 id="mvTitle">${t('move_registration_heading')}</h3>
+        <p class="sub">${escapeHtmlAdmin(reg.owner_name)}</p>
+
+        <form id="moveForm">
+          <div class="field">
+            <label for="mvClassSelect">${t('select_class_label')}</label>
+            <select id="mvClassSelect" required>
+              ${otherClasses.length
+                ? otherClasses.map((c) => `<option value="${c.id}">${escapeHtmlAdmin(c.title)} — ${new Date(c.starts_at).toLocaleDateString(getLang() === 'en' ? 'en-GB' : 'da-DK')} (${tPlural('spots_left', c.spots_left)})</option>`).join('')
+                : `<option value="" disabled>${t('no_classes_yet')}</option>`}
+            </select>
+          </div>
+
+          <div id="mvMsg" class="form-error" hidden></div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="mvCancelBtn">${t('cancel_btn')}</button>
+            <button type="submit" class="btn btn-primary" id="mvSubmitBtn" ${otherClasses.length ? '' : 'disabled'}>${t('move_btn')}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('mvCancelBtn').addEventListener('click', closeModal);
+  document.getElementById('mvBackdrop').addEventListener('click', (e) => {
+    if (e.target.id === 'mvBackdrop') closeModal();
+  });
+
+  document.getElementById('moveForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('mvMsg');
+    const btn = document.getElementById('mvSubmitBtn');
+    msg.hidden = true;
+    btn.disabled = true;
+    btn.textContent = t('saving_btn');
+
+    const newClassId = document.getElementById('mvClassSelect').value;
+
+    try {
+      const res = await fetch(`${API}/admin/registrations/${reg.id}/move`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({ new_class_id: newClassId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || t('err_generic'));
+
+      closeModal();
+      await loadClasses();
+      await loadRoster(currentClassId);
+    } catch (err) {
+      msg.textContent = err.message;
+      msg.hidden = false;
+      btn.disabled = false;
+      btn.textContent = t('move_btn');
+    }
+  });
+}
+
+function escapeHtmlAdmin(str) {
+  const div = document.createElement('div');
+  div.textContent = str ?? '';
+  return div.innerHTML;
+}
 
 document.getElementById('createForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -117,11 +263,14 @@ document.getElementById('createForm').addEventListener('submit', async (e) => {
   msg.hidden = true;
 
   const endsAtVal = document.getElementById('ends_at').value;
+  const releaseAtVal = document.getElementById('release_at').value;
   const body = {
     title: document.getElementById('title').value,
     description: document.getElementById('description').value,
     starts_at: new Date(document.getElementById('starts_at').value).toISOString(),
     ends_at: endsAtVal ? new Date(endsAtVal).toISOString() : null,
+    release_at: releaseAtVal ? new Date(releaseAtVal).toISOString() : null,
+    announce_before_release: document.getElementById('announce_before_release').checked,
     weekday: document.getElementById('weekday').value,
     location: document.getElementById('location').value,
     max_participants: Number(document.getElementById('max_participants').value),
@@ -169,12 +318,14 @@ function wireClassButtons(cls) {
   const copyBtn = document.getElementById(`copy-${cls.id}`);
   const editBtn = document.getElementById(`edit-${cls.id}`);
   const deleteBtn = document.getElementById(`delete-${cls.id}`);
+  const addPartBtn = document.getElementById(`addpart-${cls.id}`);
   if (closeBtn) closeBtn.addEventListener('click', () => toggleOpen(cls.id, false));
   if (openBtn) openBtn.addEventListener('click', () => toggleOpen(cls.id, true));
   if (rosterBtn) rosterBtn.addEventListener('click', () => loadRoster(cls.id));
   if (copyBtn) copyBtn.addEventListener('click', () => copyClass(cls));
   if (editBtn) editBtn.addEventListener('click', () => editClass(cls));
   if (deleteBtn) deleteBtn.addEventListener('click', () => deleteClass(cls));
+  if (addPartBtn) addPartBtn.addEventListener('click', () => openAddParticipantModal(cls));
 }
 
 function renderClasses() {
@@ -199,6 +350,7 @@ function classBlock(cls) {
   return `
     <div style="border-top:1px solid var(--line); padding: 14px 0;">
       <strong>${cls.title}</strong>
+      ${cls.not_yet_released ? `<span class="tag" style="background:rgba(200,155,60,0.2); color:var(--brass-bright); margin-left:8px;">${t('not_released_yet_label', { date: new Date(cls.release_at).toLocaleString(getLang() === 'en' ? 'en-GB' : 'da-DK') })}</span>` : ''}
       <div style="color:var(--bone-dim); font-size:13px; line-height:1.6;">
         ${t('paid_count_label', { n: cls.paid_count })} ·
         ${t('pay_at_class_count_label', { n: cls.pay_at_class_confirmed_count })} ·
@@ -215,6 +367,7 @@ function classBlock(cls) {
               : `<button class="btn btn-secondary" id="open-${cls.id}">${t('reopen_btn')}</button>`)
           : ''}
         <button class="btn btn-secondary" id="roster-${cls.id}">${t('view_roster_btn')}</button>
+        <button class="btn btn-secondary" id="addpart-${cls.id}">${t('add_participant_btn')}</button>
         <button class="btn btn-secondary" id="copy-${cls.id}">${t('copy_class_btn')}</button>
         <button class="btn btn-secondary" id="edit-${cls.id}">${t('edit_class_btn')}</button>
         <button class="btn btn-secondary btn-danger" id="delete-${cls.id}">${t('delete_class_btn')}</button>
@@ -243,6 +396,8 @@ function editClass(cls) {
   document.getElementById('price_dkk').value = cls.price_dkk ?? '';
   document.getElementById('starts_at').value = toDatetimeLocalValue(cls.starts_at);
   document.getElementById('ends_at').value = toDatetimeLocalValue(cls.ends_at);
+  document.getElementById('release_at').value = toDatetimeLocalValue(cls.release_at);
+  document.getElementById('announce_before_release').checked = !!cls.announce_before_release;
 
   document.getElementById('createFormHeading').textContent = t('edit_class_heading');
   document.getElementById('createSubmitBtn').textContent = t('save_changes_btn');
@@ -276,6 +431,8 @@ function copyClass(cls) {
   document.getElementById('price_dkk').value = cls.price_dkk ?? '';
   document.getElementById('starts_at').value = '';
   document.getElementById('ends_at').value = '';
+  document.getElementById('release_at').value = '';
+  document.getElementById('announce_before_release').checked = false;
 
   document.getElementById('createClassCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
   document.getElementById('starts_at').focus();
@@ -305,7 +462,7 @@ async function loadRoster(id) {
 
     box.innerHTML = `
       <table>
-        <thead><tr><th>${t('col_owner')}</th><th>${t('col_dog')}</th><th>${t('col_email')}</th><th>${t('col_phone')}</th><th>${t('col_payment')}</th><th>${t('col_status')}</th><th></th></tr></thead>
+        <thead><tr><th>${t('col_owner')}</th><th>${t('col_dog')}</th><th>${t('col_email')}</th><th>${t('col_phone')}</th><th>${t('col_payment')}</th><th>${t('col_status')}</th><th></th><th></th></tr></thead>
         <tbody>
           ${rows.map((r) => `
             <tr>
@@ -313,8 +470,9 @@ async function loadRoster(id) {
               <td>${r.dog_name || '—'}</td>
               <td>${r.email}</td>
               <td>${r.phone}</td>
-              <td>${r.payment_method === 'pay_at_class' ? t('payment_at_class') : t('payment_mobilepay')}</td>
+              <td>${r.payment_method === 'pay_at_class' ? t('payment_at_class') : r.payment_method === 'manual' ? t('payment_manual') : t('payment_mobilepay')}</td>
               <td><span class="tag tag-${r.status}">${r.status}</span></td>
+              <td><button class="btn-delete" data-move-reg="${r.id}" title="${t('move_btn')}">⇄</button></td>
               <td><button class="btn-delete" data-delete-reg="${r.id}" title="${t('delete_registration_btn')}">✕</button></td>
             </tr>
           `).join('')}
@@ -324,6 +482,10 @@ async function loadRoster(id) {
 
     box.querySelectorAll('[data-delete-reg]').forEach((btn) => {
       btn.addEventListener('click', () => deleteRegistration(btn.dataset.deleteReg, id));
+    });
+    box.querySelectorAll('[data-move-reg]').forEach((btn) => {
+      const reg = rows.find((r) => r.id === btn.dataset.moveReg);
+      btn.addEventListener('click', () => openMoveModal(reg, id));
     });
   } catch (err) {
     box.innerHTML = `<p style="color:var(--clay); font-size:13px">${err.message}</p>`;

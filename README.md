@@ -19,7 +19,10 @@ one-click unsubscribe link in every email.
 Danish, with a DA / EN toggle in the top-right corner of every page. The
 choice is remembered per browser. This only translates the app's own
 interface text — class titles/descriptions you type in as admin are
-shown as-written in whatever language you enter them.
+shown as-written in whatever language you enter them. Confirmation and
+release-announcement emails are always sent in Danish, regardless of
+which language someone was browsing in when they registered - the app
+doesn't currently track a per-person email-language preference.
 
 **Branding**: your logo is in `icons/logo.png`, used in the site header,
 login page, and admin page, and the app icons (`icons/icon-192.png`,
@@ -47,10 +50,13 @@ these files for a higher-resolution version any time.
 1. In your Supabase project, open **SQL Editor** and run everything in
    `supabase/schema.sql`. This creates the tables, the availability view,
    and the two functions the API relies on.
-   - If you already ran an older version of this schema, instead run
-     `supabase/migration-2-pay-at-class.sql` then
-     `supabase/migration-3-newsletter.sql` — each only adds new columns
-     and functions, without touching existing data.
+   - If you already ran an older version of this schema, instead run, in
+     order: `supabase/migration-2-pay-at-class.sql`,
+     `supabase/migration-3-newsletter.sql`,
+     `supabase/migration-4-end-date.sql`,
+     `supabase/migration-5-payment-breakdown.sql`, and
+     `supabase/migration-6-release-admin-move.sql` — each only adds new
+     columns and functions, without touching existing data.
 2. Grab your **Project URL** and **Secret key** (Project Settings → API →
    API Keys — on newer Supabase projects this replaces the old
    `service_role` key; it works as a drop-in equivalent). This is a
@@ -106,7 +112,36 @@ If you'd rather skip this for now, that's fine — registration and the
 admin panel work without it. The "Send to subscribers" button will just
 fail with a clear error until these are set.
 
-## 4. Deploy
+## 4. Set up scheduled release announcements
+
+This powers "send a newsletter 10 minutes before a class's release date."
+Vercel's free (Hobby) plan only allows cron jobs to run once a day, which
+is too coarse for this, so a small GitHub Actions workflow
+(`.github/workflows/announce-releases.yml`, already included) pings a
+secured endpoint every 5 minutes instead - no extra signups, no paid plan
+needed.
+
+1. Make up a long random string and add it to Vercel's environment
+   variables as `CRON_SECRET`.
+2. In your GitHub repo: **Settings → Secrets and variables → Actions →
+   New repository secret**. Add two secrets:
+   - `CRON_SECRET` — the exact same value as in Vercel
+   - `APP_URL` — your live site's URL, e.g.
+     `https://hund-og-handler.vercel.app` (no trailing slash)
+3. That's it — the workflow runs automatically once it's on GitHub. You
+   can also trigger it manually anytime from the repo's **Actions** tab
+   (find "Announce upcoming class releases" → **Run workflow**) to test it.
+
+When creating or editing a class with a **release date** set, check
+**"Send newsletter 10 min before release"**. If multiple classes share
+the exact same release date/time, they're automatically bundled into a
+single email instead of one each.
+
+If you'd rather skip this for now, that's fine too — everything else
+works without it; classes just won't get an automatic pre-release
+announcement.
+
+## 5. Deploy
 
 1. Push this folder to a GitHub repo, then **import it in Vercel** as a
    new project (Vercel auto-detects the `api/` functions and serves the
@@ -135,7 +170,7 @@ locally. Since MobilePay needs a public HTTPS URL for its webhook, use a
 tunnel (e.g. `ngrok http 3000`) and temporarily set `PUBLIC_BASE_URL` in
 `.env.local` to the tunnel URL while testing a full payment flow.
 
-## 5. Before going live, a few things worth tightening
+## 6. Before going live, a few things worth tightening
 
 - **Email deliverability**: for real sending volume, make sure your
   Resend domain's SPF/DKIM are verified (Resend flags this in their
@@ -159,11 +194,14 @@ tunnel (e.g. `ngrok http 3000`) and temporarily set `PUBLIC_BASE_URL` in
 ## Project structure
 
 ```
+.github/workflows/
+  announce-releases.yml       GitHub Actions cron: pings the release-announcement endpoint every 5 min
 api/
   classes/
     index.js                GET list / POST create (admin)
     [id].js                  GET one / PATCH edit or close (admin)
     [id]/registrations.js     GET roster for a class (admin)
+    [id]/participants.js       (admin) POST add participant without payment
   register/
     index.js                 POST create registration + start payment
     [id].js                   GET registration status
@@ -171,18 +209,24 @@ api/
     mobilepay.js               receive MobilePay payment confirmations
   admin/
     newsletter.js              GET subscriber count / POST send newsletter
+    classes/[id]/participants.js  POST add a participant directly, no payment
+    registrations/[id].js         DELETE a registration
+    registrations/[id]/move.js     PATCH move a registration to another class
+  cron/
+    announce-releases.js       scheduled: bundles + sends "releasing soon" emails
   unsubscribe.js                one-click unsubscribe (no login needed)
 lib/
   supabase.js                 Supabase client (secret/service role key)
   mobilepay.js                MobilePay ePayment API client
   email.js                     Resend email client
+  registrationEmail.js          "you're confirmed" email, reused everywhere a seat is confirmed
   unsubscribe.js                signed unsubscribe link helper
   http.js                     Supabase-Auth admin check / base-url helper
 supabase/
   schema.sql                   run once in the Supabase SQL editor (fresh installs)
-  migration-2-pay-at-class.sql   run these instead if you already had the
-  migration-3-newsletter.sql       old schema, in order
-index.html, login.html, admin.html, payment-return.html   pages
+  migration-2 .. migration-6     run these instead if you already had an
+                                    older schema, in numeric order
+index.html, login.html, admin.html, payment-return.html, accept-invite.html   pages
 app.js, admin.js                                             page logic
 supabase-config.js              Supabase URL + publishable key (safe to be public)
 styles.css, manifest.json, sw.js                shared styling + PWA files

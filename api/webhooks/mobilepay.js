@@ -1,5 +1,6 @@
 const { supabase } = require('../../lib/supabase');
 const { getPayment } = require('../../lib/mobilepay');
+const { sendRegistrationConfirmationEmail } = require('../../lib/registrationEmail');
 
 // MobilePay calls this URL whenever a payment's state changes. Register it
 // via the Webhooks API: https://developer.vippsmobilepay.com/docs/APIs/webhooks-api/
@@ -31,8 +32,13 @@ module.exports = async function handler(req, res) {
 
     if (state === 'AUTHORIZED') {
       // Atomic confirm + auto-close-if-full (see supabase/schema.sql).
-      const { error } = await supabase.rpc('confirm_registration', { p_reg_id: reference });
-      if (error) console.error('confirm_registration error:', error);
+      const { data: confirmed, error } = await supabase.rpc('confirm_registration', { p_reg_id: reference }).single();
+      if (error) {
+        console.error('confirm_registration error:', error);
+      } else if (confirmed?.status === 'confirmed') {
+        const { data: cls } = await supabase.from('classes').select('*').eq('id', confirmed.class_id).single();
+        if (cls) await sendRegistrationConfirmationEmail(confirmed, cls);
+      }
     } else if (state === 'TERMINATED' || state === 'EXPIRED') {
       await supabase
         .from('registrations')

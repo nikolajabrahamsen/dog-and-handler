@@ -1,6 +1,7 @@
 const { supabase } = require('../../lib/supabase');
 const { createPayment } = require('../../lib/mobilepay');
 const { requestBaseUrl } = require('../../lib/http');
+const { sendRegistrationConfirmationEmail } = require('../../lib/registrationEmail');
 
 const ERROR_MESSAGES = {
   class_not_found: { status: 404, message: 'Class not found' },
@@ -47,13 +48,19 @@ module.exports = async function handler(req, res) {
   }
 
   const base = requestBaseUrl(req);
+  const { data: cls } = await supabase.from('classes').select('*').eq('id', class_id).single();
 
   // --- Pay at class: confirm the seat immediately, no MobilePay involved. ---
   if (payment_method === 'pay_at_class') {
-    const { error: confirmError } = await supabase.rpc('confirm_registration', { p_reg_id: reg.id });
+    const { data: confirmed, error: confirmError } = await supabase
+      .rpc('confirm_registration', { p_reg_id: reg.id })
+      .single();
     if (confirmError) {
       console.error('confirm_registration error:', confirmError);
       return res.status(500).json({ error: 'Could not confirm registration' });
+    }
+    if (confirmed?.status === 'confirmed' && cls) {
+      await sendRegistrationConfirmationEmail(confirmed, cls);
     }
     // Reuse the same "confirming your spot" page - it polls status and will
     // immediately show the confirmed state since the seat is already booked.
@@ -64,8 +71,6 @@ module.exports = async function handler(req, res) {
   }
 
   // --- MobilePay: create the payment and send the customer to approve it. ---
-  const { data: cls } = await supabase.from('classes').select('*').eq('id', class_id).single();
-
   try {
     const payment = await createPayment({
       amountDkk: cls.price_dkk,

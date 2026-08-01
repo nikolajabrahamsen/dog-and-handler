@@ -82,6 +82,19 @@
 
       <div class="grid-2">
         <div>
+          <label for="release_at" data-i18n="release_datetime_label">Frigivelsesdato (valgfrit)</label>
+          <input id="release_at" type="datetime-local" />
+        </div>
+        <div style="display:flex; align-items:flex-end; padding-bottom:10px;">
+          <label class="checkbox-row" style="margin:0;">
+            <input type="checkbox" id="announce_before_release" />
+            <span data-i18n="announce_before_release_label">Send nyhedsbrev 10 min. før frigivelse</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
           <label for="weekday" data-i18n="weekday_label">Ugedag (valgfrit)</label>
           <input id="weekday" placeholder="fx tirsdage" />
         </div>

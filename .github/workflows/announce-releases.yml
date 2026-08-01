@@ -1,0 +1,19 @@
+name: Announce upcoming class releases
+
+on:
+  schedule:
+    # Every 5 minutes. GitHub Actions doesn't guarantee exact timing under
+    # load (can run a few minutes late), which is fine here - the endpoint
+    # itself checks a 10-minute window, not an exact instant.
+    - cron: '*/5 * * * *'
+  # Lets you trigger it manually from the Actions tab, e.g. to test.
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call the release-announcement endpoint
+        run: |
+          curl -sf -X POST "${{ secrets.APP_URL }}/api/cron/announce-releases" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

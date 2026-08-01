@@ -5,12 +5,14 @@ function withComputed(row) {
   const spotsLeft = Math.max(0, row.max_participants - row.held_count);
   const reservedCount = Math.max(0, row.held_count - row.confirmed_count);
   const expired = !!row.ends_at && new Date(row.ends_at) < new Date();
+  const notYetReleased = !!row.release_at && new Date(row.release_at) > new Date();
   return {
     ...row,
     spots_left: spotsLeft,
     reserved_count: reservedCount,
-    registration_open: !!row.is_open && spotsLeft > 0 && !expired,
+    registration_open: !!row.is_open && spotsLeft > 0 && !expired && !notYetReleased,
     is_expired: expired,
+    not_yet_released: notYetReleased,
   };
 }
 
@@ -31,7 +33,7 @@ module.exports = async function handler(req, res) {
   if (req.method === 'PATCH') {
     if (!(await requireAdmin(req))) return res.status(401).json({ error: 'Unauthorized' });
 
-    const allowed = ['title', 'description', 'starts_at', 'ends_at', 'weekday', 'location', 'max_participants', 'price_dkk', 'is_open'];
+    const allowed = ['title', 'description', 'starts_at', 'ends_at', 'weekday', 'location', 'max_participants', 'price_dkk', 'is_open', 'release_at', 'announce_before_release'];
     const updates = {};
     for (const key of allowed) {
       if (req.body && req.body[key] !== undefined) updates[key] = req.body[key];
