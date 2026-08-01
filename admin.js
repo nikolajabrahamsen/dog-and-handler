@@ -35,42 +35,81 @@ function exitEditMode() {
 
 document.getElementById('cancelEditBtn').addEventListener('click', exitEditMode);
 
-document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const msg = document.getElementById('changePasswordMsg');
-  const btn = document.getElementById('changePasswordBtn');
-  msg.hidden = true;
+function closeChangePasswordModal() {
+  document.getElementById('modalRoot').innerHTML = '';
+}
 
-  const p1 = document.getElementById('newPassword').value;
-  const p2 = document.getElementById('newPassword2').value;
+function openChangePasswordModal() {
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="modal-backdrop" id="cpBackdrop">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cpTitle">
+        <h3 id="cpTitle">${t('change_password_heading')}</h3>
 
-  if (p1 !== p2) {
-    msg.textContent = t('passwords_dont_match');
+        <form id="changePasswordForm">
+          <div class="field">
+            <label for="newPassword">${t('new_password_label')}</label>
+            <input id="newPassword" type="password" required minlength="8" autocomplete="new-password" />
+          </div>
+          <div class="field">
+            <label for="newPassword2">${t('confirm_new_password_label')}</label>
+            <input id="newPassword2" type="password" required minlength="8" autocomplete="new-password" />
+          </div>
+
+          <div id="changePasswordMsg" class="form-error" hidden></div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="cpCancelBtn">${t('cancel_btn')}</button>
+            <button type="submit" class="btn btn-primary" id="changePasswordBtn">${t('change_password_btn')}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('cpCancelBtn').addEventListener('click', closeChangePasswordModal);
+  document.getElementById('cpBackdrop').addEventListener('click', (e) => {
+    if (e.target.id === 'cpBackdrop') closeChangePasswordModal();
+  });
+
+  document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('changePasswordMsg');
+    const btn = document.getElementById('changePasswordBtn');
+    msg.hidden = true;
     msg.style.color = 'var(--clay)';
+
+    const p1 = document.getElementById('newPassword').value;
+    const p2 = document.getElementById('newPassword2').value;
+
+    if (p1 !== p2) {
+      msg.textContent = t('passwords_dont_match');
+      msg.hidden = false;
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = t('saving_btn');
+
+    const { error } = await client.auth.updateUser({ password: p1 });
+
+    if (error) {
+      msg.textContent = error.message;
+      msg.hidden = false;
+      btn.disabled = false;
+      btn.textContent = t('change_password_btn');
+      return;
+    }
+
+    msg.style.color = 'var(--brass-bright)';
+    msg.textContent = t('password_changed_msg');
     msg.hidden = false;
-    return;
-  }
+    btn.disabled = true;
+    setTimeout(closeChangePasswordModal, 1100);
+  });
+}
 
-  btn.disabled = true;
-  btn.textContent = t('saving_btn');
-
-  const { error } = await client.auth.updateUser({ password: p1 });
-
-  btn.disabled = false;
-  btn.textContent = t('change_password_btn');
-
-  if (error) {
-    msg.textContent = error.message;
-    msg.style.color = 'var(--clay)';
-    msg.hidden = false;
-    return;
-  }
-
-  msg.textContent = t('password_changed_msg');
-  msg.style.color = 'var(--brass-bright)';
-  msg.hidden = false;
-  e.target.reset();
-});
+document.getElementById('changePasswordOpenBtn').addEventListener('click', openChangePasswordModal);
 
 document.getElementById('createForm').addEventListener('submit', async (e) => {
   e.preventDefault();

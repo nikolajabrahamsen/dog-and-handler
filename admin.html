@@ -55,24 +55,9 @@
     </div>
     <div style="text-align:right;">
       <div id="userEmail" style="font-size:13px; color:var(--bone-dim); margin-bottom:6px;"></div>
+      <button class="btn btn-secondary" id="changePasswordOpenBtn" data-i18n="change_password_btn">Skift adgangskode</button>
       <button class="btn btn-secondary" id="logoutBtn" data-i18n="logout_btn">Log ud</button>
     </div>
-  </div>
-
-  <div class="admin-card">
-    <h2 data-i18n="change_password_heading">Skift adgangskode</h2>
-    <form id="changePasswordForm">
-      <label for="newPassword" data-i18n="new_password_label">Ny adgangskode</label>
-      <input id="newPassword" type="password" required minlength="8" autocomplete="new-password" />
-
-      <label for="newPassword2" data-i18n="confirm_new_password_label">Bekræft ny adgangskode</label>
-      <input id="newPassword2" type="password" required minlength="8" autocomplete="new-password" />
-
-      <div style="margin-top:16px">
-        <button class="btn btn-primary" type="submit" id="changePasswordBtn" data-i18n="change_password_btn">Skift adgangskode</button>
-      </div>
-      <div id="changePasswordMsg" class="form-error" style="color: var(--brass-bright)" hidden></div>
-    </form>
   </div>
 
   <div class="admin-card" id="createClassCard">
@@ -151,6 +136,8 @@
     <div id="oldClassesList"></div>
   </div>
 </div>
+
+<div id="modalRoot"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="/supabase-config.js"></script>
