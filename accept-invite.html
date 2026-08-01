@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hund &amp; Handler — Admin</title>
+<link rel="icon" href="/icons/favicon.png" />
+<link rel="stylesheet" href="/styles.css" />
+<style>
+  .login-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .login-card {
+    background: var(--pine-deep);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px 28px;
+    width: 100%;
+    max-width: 380px;
+  }
+  .login-card img { display: block; max-width: 120px; margin: 0 auto 18px; border-radius: 8px; }
+  .login-card h1 {
+    font-family: var(--font-display);
+    font-size: 24px;
+    margin: 0 0 6px;
+  }
+  .login-card p.sub { color: var(--bone-dim); font-size: 14px; margin: 0 0 22px; }
+  .login-card label { display: block; font-size: 13px; margin: 14px 0 6px; color: var(--bone-dim); }
+  .login-card input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--pine);
+    color: var(--bone);
+    font-size: 14px;
+  }
+  .login-card button { width: 100%; margin-top: 20px; }
+  .login-error { color: var(--clay); font-size: 13px; margin-top: 12px; min-height: 1em; }
+  .login-loading { text-align: center; color: var(--bone-dim); font-size: 14px; }
+</style>
+</head>
+<body>
+<div id="langSwitcher"></div>
+
+<div class="login-wrap">
+  <div class="login-card">
+    <img src="/icons/logo.png" alt="Hund &amp; Handler" />
+
+    <div id="loadingState" class="login-loading" data-i18n="checking_invite">Tjekker invitationen…</div>
+
+    <div id="formState" hidden>
+      <h1 data-i18n="set_password_title">Vælg en adgangskode</h1>
+      <p class="sub" data-i18n="set_password_sub">Vælg en adgangskode for at få adgang til admin-panelet.</p>
+      <form id="setPasswordForm">
+        <label for="password" data-i18n="password_label">Adgangskode</label>
+        <input id="password" type="password" required minlength="8" autocomplete="new-password" />
+        <label for="password2" data-i18n="confirm_password_label">Bekræft adgangskode</label>
+        <input id="password2" type="password" required minlength="8" autocomplete="new-password" />
+        <button type="submit" class="btn btn-primary" id="setPasswordBtn" data-i18n="set_password_btn">Gem adgangskode</button>
+        <div class="login-error" id="formError"></div>
+      </form>
+    </div>
+
+    <div id="errorState" hidden>
+      <h1 data-i18n="invite_invalid_title">Linket virker ikke</h1>
+      <p class="sub" data-i18n="invite_invalid_body">Dette invitationslink er ugyldigt eller udløbet. Bed om en ny invitation.</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="/supabase-config.js"></script>
+<script src="/i18n.js"></script>
+<script>
+  const client = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.publishableKey);
+
+  const loadingState = document.getElementById('loadingState');
+  const formState = document.getElementById('formState');
+  const errorState = document.getElementById('errorState');
+
+  function showForm() {
+    loadingState.hidden = true;
+    errorState.hidden = true;
+    formState.hidden = false;
+  }
+  function showError() {
+    loadingState.hidden = true;
+    formState.hidden = true;
+    errorState.hidden = false;
+  }
+
+  async function init() {
+    // Handles both link styles Supabase may send:
+    //  - ?code=... (PKCE - needs an explicit exchange)
+    //  - #access_token=...&refresh_token=... (implicit - auto-detected by the client)
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+
+    if (code) {
+      const { error } = await client.auth.exchangeCodeForSession(window.location.href);
+      if (error) {
+        showError();
+        return;
+      }
+    }
+
+    // Give the implicit-flow auto-detection a moment to run, then check.
+    const { data } = await client.auth.getSession();
+    if (data.session) {
+      showForm();
+    } else {
+      showError();
+    }
+  }
+
+  document.getElementById('setPasswordForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById('formError');
+    const btn = document.getElementById('setPasswordBtn');
+    errorEl.textContent = '';
+
+    const p1 = document.getElementById('password').value;
+    const p2 = document.getElementById('password2').value;
+
+    if (p1 !== p2) {
+      errorEl.textContent = t('passwords_dont_match');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = t('saving_btn');
+
+    const { error } = await client.auth.updateUser({ password: p1 });
+
+    if (error) {
+      errorEl.textContent = error.message;
+      btn.disabled = false;
+      btn.textContent = t('set_password_btn');
+      return;
+    }
+
+    window.location.href = '/admin.html';
+  });
+
+  init();
+</script>
+</body>
+</html>
