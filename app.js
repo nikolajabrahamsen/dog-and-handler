@@ -166,6 +166,11 @@ function openRegisterModal(classId, classes) {
             <span>${t('newsletter_label')}</span>
           </label>
 
+          <label class="checkbox-row terms-row">
+            <input type="checkbox" id="accept_terms" name="accept_terms" required />
+            <span>${t('terms_accept_label')}</span>
+          </label>
+
           <fieldset class="payment-choice">
             <legend>${t('payment_legend')}</legend>
             <label class="radio-row">
@@ -217,6 +222,12 @@ function openRegisterModal(classId, classes) {
     e.preventDefault();
     const errorEl = document.getElementById('formError');
     errorEl.hidden = true;
+
+    if (!document.getElementById('accept_terms').checked) {
+      errorEl.textContent = t('terms_required');
+      errorEl.hidden = false;
+      return;
+    }
 
     const formData = new FormData(e.target);
     const paymentMethod = formData.get('payment_method') || 'mobilepay';

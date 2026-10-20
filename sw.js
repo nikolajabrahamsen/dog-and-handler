@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hund-og-handler-v3';
+const CACHE_NAME = 'hund-og-handler-v4';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -6,6 +6,9 @@ const APP_SHELL = [
   '/app.js',
   '/i18n.js',
   '/manifest.json',
+  '/company-config.js',
+  '/company.js',
+  '/vilkaar.html',
 ];
 
 self.addEventListener('install', (event) => {

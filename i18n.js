@@ -160,6 +160,12 @@ const TRANSLATIONS = {
     payment_mobilepay: 'MobilePay',
     delete_registration_btn: 'Slet tilmelding',
     confirm_delete_registration: 'Er du sikker på, at du vil slette denne tilmelding? Dette kan ikke fortrydes.',
+    footer_cvr: 'CVR',
+    footer_email: 'E-mail',
+    footer_phone: 'Telefon',
+    footer_terms: 'Handelsbetingelser',
+    terms_accept_label: 'Jeg har læst og accepterer <a href="/vilkaar.html" target="_blank" rel="noopener">handelsbetingelserne</a>',
+    terms_required: 'Du skal acceptere handelsbetingelserne for at fortsætte.',
   },
 
   en: {
@@ -312,6 +318,12 @@ const TRANSLATIONS = {
     payment_mobilepay: 'MobilePay',
     delete_registration_btn: 'Delete registration',
     confirm_delete_registration: 'Are you sure you want to delete this registration? This cannot be undone.',
+    footer_cvr: 'CVR',
+    footer_email: 'Email',
+    footer_phone: 'Phone',
+    footer_terms: 'Terms and conditions',
+    terms_accept_label: 'I have read and accept the <a href="/vilkaar.html" target="_blank" rel="noopener">terms and conditions</a>',
+    terms_required: 'You must accept the terms and conditions to continue.',
   },
 };
 

@@ -390,3 +390,16 @@ a { color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .btn { transition: none; }
 }
+
+/* ---- Footer / terms ---- */
+.site-footer { padding: 28px 16px calc(28px + env(safe-area-inset-bottom)); color: var(--bone-dim); font-size: 13px; line-height: 1.7; text-align: center; }
+.site-footer a { color: var(--bone-dim); text-decoration: underline; }
+.site-footer .footer-links { margin-top: 6px; }
+.terms-row { margin-top: 10px; }
+.terms-row a { color: inherit; text-decoration: underline; }
+.terms-page { max-width: 760px; margin: 0 auto; padding: 24px 16px 0; color: var(--bone); line-height: 1.65; }
+.terms-page h1 { font-size: 28px; margin: 16px 0 4px; }
+.terms-page h2 { font-size: 18px; margin: 26px 0 6px; color: var(--brass); }
+.terms-page p, .terms-page li { color: var(--bone-dim); font-size: 15px; }
+.terms-page a { color: var(--bone); }
+.terms-back { display: inline-block; margin-top: 8px; color: var(--bone-dim); }
