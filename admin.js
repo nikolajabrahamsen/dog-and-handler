@@ -289,6 +289,7 @@ document.getElementById('createForm').addEventListener('submit', async (e) => {
     location_url: document.getElementById('location_url').value || null,
     max_participants: Number(document.getElementById('max_participants').value),
     price_dkk: Number(document.getElementById('price_dkk').value),
+    payment_options: document.getElementById('payment_options').value,
   };
 
   const isEditing = !!editingClassId;
@@ -408,6 +409,7 @@ function editClass(cls) {
   document.getElementById('location_url').value = cls.location_url || '';
   document.getElementById('max_participants').value = cls.max_participants ?? '';
   document.getElementById('price_dkk').value = cls.price_dkk ?? '';
+  document.getElementById('payment_options').value = cls.payment_options || 'both';
   document.getElementById('starts_at').value = toDatetimeLocalValue(cls.starts_at);
   document.getElementById('ends_at').value = toDatetimeLocalValue(cls.ends_at);
   document.getElementById('release_at').value = toDatetimeLocalValue(cls.release_at);
@@ -443,6 +445,7 @@ function copyClass(cls) {
   document.getElementById('location_url').value = cls.location_url || '';
   document.getElementById('max_participants').value = cls.max_participants ?? '';
   document.getElementById('price_dkk').value = cls.price_dkk ?? '';
+  document.getElementById('payment_options').value = cls.payment_options || 'both';
   document.getElementById('starts_at').value = '';
   document.getElementById('ends_at').value = '';
   document.getElementById('release_at').value = '';

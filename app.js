@@ -135,6 +135,8 @@ function openRegisterModal(classId, classes) {
   const cls = classes.find((c) => c.id === classId);
   if (!cls) return;
 
+  const opts = cls.payment_options || 'both';
+  const defaultMethod = opts === 'pay_at_class' ? 'pay_at_class' : 'mobilepay';
   const root = document.getElementById('modalRoot');
   root.innerHTML = `
     <div class="modal-backdrop" id="backdrop">
@@ -158,7 +160,7 @@ function openRegisterModal(classId, classes) {
           <div class="field">
             <label for="phone">${t('field_phone')}</label>
             <input id="phone" name="phone" type="tel" required autocomplete="tel" placeholder="+45 12 34 56 78" />
-            <p class="field-note" id="phoneNote">${t('phone_note_mobilepay')}</p>
+            <p class="field-note" id="phoneNote">${t(defaultMethod === 'pay_at_class' ? 'phone_note_pay_at_class' : 'phone_note_mobilepay')}</p>
           </div>
 
           <label class="checkbox-row">
@@ -171,6 +173,7 @@ function openRegisterModal(classId, classes) {
             <span>${t('terms_accept_label')}</span>
           </label>
 
+          ${opts === 'both' ? `
           <fieldset class="payment-choice">
             <legend>${t('payment_legend')}</legend>
             <label class="radio-row">
@@ -181,16 +184,16 @@ function openRegisterModal(classId, classes) {
               <input type="radio" name="payment_method" value="pay_at_class" />
               <span>${t('pay_at_class_label')}</span>
             </label>
-          </fieldset>
+          </fieldset>` : `<input type="hidden" name="payment_method" value="${defaultMethod}" />`}
 
           <div id="formError" class="form-error" hidden></div>
 
           <div class="modal-actions">
             <button type="button" class="btn btn-secondary" id="cancelBtn">${t('cancel_btn')}</button>
-            <button type="submit" class="btn btn-primary" id="payBtn">${t('register_submit_btn')}</button>
+            <button type="submit" class="btn btn-primary" id="payBtn">${t(defaultMethod === 'pay_at_class' ? 'confirm_submit_btn' : 'register_submit_btn')}</button>
           </div>
 
-          <p class="pay-note" id="payNote">${t('pay_note_mobilepay')}</p>
+          <p class="pay-note" id="payNote">${t(defaultMethod === 'pay_at_class' ? 'pay_note_pay_at_class' : 'pay_note_mobilepay')}</p>
         </form>
       </div>
     </div>

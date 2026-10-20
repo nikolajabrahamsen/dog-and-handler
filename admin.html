@@ -12,7 +12,7 @@
   .admin-card h2 { font-family: var(--font-display); margin-top: 0; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   label { display:block; font-size: 13px; margin: 10px 0 4px; color: var(--bone-dim); }
-  input, textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--pine); color: var(--bone); font-size: 14px; }
+  input, textarea, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--pine); color: var(--bone); font-size: 14px; }
   textarea { min-height: 70px; font-family: inherit; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
   th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
@@ -115,6 +115,15 @@
           <label for="price_dkk" data-i18n="price_label">Pris (DKK)</label>
           <input id="price_dkk" type="number" min="0" required />
         </div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <label for="payment_options" data-i18n="payment_options_label">Betalingsmetoder</label>
+        <select id="payment_options">
+          <option value="both" data-i18n="payment_options_both">MobilePay og betaling ved fremmøde</option>
+          <option value="mobilepay" data-i18n="payment_options_mobilepay">Kun MobilePay</option>
+          <option value="pay_at_class" data-i18n="payment_options_pay_at_class">Kun betaling ved fremmøde</option>
+        </select>
       </div>
 
       <div style="margin-top:16px; display:flex; gap:10px; align-items:center;">

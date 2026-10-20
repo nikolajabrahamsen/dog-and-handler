@@ -23,6 +23,13 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'class_id, owner_name, email and phone are required' });
   }
 
+  // Enforce the payment methods the admin allowed for this class.
+  const { data: clsOpts } = await supabase.from('classes').select('payment_options').eq('id', class_id).single();
+  const allowed = clsOpts?.payment_options || 'both';
+  if (allowed !== 'both' && allowed !== payment_method) {
+    return res.status(400).json({ error: 'This payment method is not available for this class' });
+  }
+
   // Atomic, race-safe capacity check + insert (see supabase/schema.sql).
   const { data: reg, error: rpcError } = await supabase
     .rpc('create_registration', {
