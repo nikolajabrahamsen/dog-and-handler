@@ -118,12 +118,17 @@
       </div>
 
       <div style="margin-top:16px;">
-        <label for="payment_options" data-i18n="payment_options_label">Betalingsmetoder</label>
-        <select id="payment_options">
-          <option value="both" data-i18n="payment_options_both">MobilePay og betaling ved fremmøde</option>
-          <option value="mobilepay" data-i18n="payment_options_mobilepay">Kun MobilePay</option>
-          <option value="pay_at_class" data-i18n="payment_options_pay_at_class">Kun betaling ved fremmøde</option>
-        </select>
+        <label data-i18n="payment_options_label">Betalingsmetoder</label>
+        <div style="display:flex; gap:24px; flex-wrap:wrap; margin-top:6px;">
+          <label class="checkbox-row" style="margin:0;">
+            <input type="checkbox" id="pay_mobilepay" checked />
+            <span data-i18n="pay_mobilepay_label">Betal nu med MobilePay</span>
+          </label>
+          <label class="checkbox-row" style="margin:0;">
+            <input type="checkbox" id="pay_at_class" checked />
+            <span data-i18n="pay_at_class_label">Betal ved fremmøde</span>
+          </label>
+        </div>
       </div>
 
       <div style="margin-top:16px; display:flex; gap:10px; align-items:center;">

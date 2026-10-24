@@ -276,6 +276,16 @@ document.getElementById('createForm').addEventListener('submit', async (e) => {
   const msg = document.getElementById('createMsg');
   msg.hidden = true;
 
+  const payMobilepay = document.getElementById('pay_mobilepay').checked;
+  const payAtClass = document.getElementById('pay_at_class').checked;
+  if (!payMobilepay && !payAtClass) {
+    msg.textContent = t('payment_options_error');
+    msg.style.color = '';
+    msg.hidden = false;
+    return;
+  }
+  const paymentOptions = payMobilepay && payAtClass ? 'both' : (payMobilepay ? 'mobilepay' : 'pay_at_class');
+
   const endsAtVal = document.getElementById('ends_at').value;
   const releaseAtVal = document.getElementById('release_at').value;
   const body = {
@@ -289,7 +299,7 @@ document.getElementById('createForm').addEventListener('submit', async (e) => {
     location_url: document.getElementById('location_url').value || null,
     max_participants: Number(document.getElementById('max_participants').value),
     price_dkk: Number(document.getElementById('price_dkk').value),
-    payment_options: document.getElementById('payment_options').value,
+    payment_options: paymentOptions,
   };
 
   const isEditing = !!editingClassId;
@@ -334,6 +344,8 @@ function wireClassButtons(cls) {
   const editBtn = document.getElementById(`edit-${cls.id}`);
   const deleteBtn = document.getElementById(`delete-${cls.id}`);
   const addPartBtn = document.getElementById(`addpart-${cls.id}`);
+  const pdfBtn = document.getElementById(`pdf-${cls.id}`);
+  if (pdfBtn) pdfBtn.addEventListener('click', () => downloadRosterPdf(cls));
   if (closeBtn) closeBtn.addEventListener('click', () => toggleOpen(cls.id, false));
   if (openBtn) openBtn.addEventListener('click', () => toggleOpen(cls.id, true));
   if (rosterBtn) rosterBtn.addEventListener('click', () => loadRoster(cls.id));
@@ -382,6 +394,7 @@ function classBlock(cls) {
               : `<button class="btn btn-secondary" id="open-${cls.id}">${t('reopen_btn')}</button>`)
           : ''}
         <button class="btn btn-secondary" id="roster-${cls.id}">${t('view_roster_btn')}</button>
+        <button class="btn btn-secondary" id="pdf-${cls.id}">${t('download_pdf_btn')}</button>
         <button class="btn btn-secondary" id="addpart-${cls.id}">${t('add_participant_btn')}</button>
         <button class="btn btn-secondary" id="copy-${cls.id}">${t('copy_class_btn')}</button>
         <button class="btn btn-secondary" id="edit-${cls.id}">${t('edit_class_btn')}</button>
@@ -409,7 +422,11 @@ function editClass(cls) {
   document.getElementById('location_url').value = cls.location_url || '';
   document.getElementById('max_participants').value = cls.max_participants ?? '';
   document.getElementById('price_dkk').value = cls.price_dkk ?? '';
-  document.getElementById('payment_options').value = cls.payment_options || 'both';
+  {
+    const po = cls.payment_options || 'both';
+    document.getElementById('pay_mobilepay').checked = po !== 'pay_at_class';
+    document.getElementById('pay_at_class').checked = po !== 'mobilepay';
+  }
   document.getElementById('starts_at').value = toDatetimeLocalValue(cls.starts_at);
   document.getElementById('ends_at').value = toDatetimeLocalValue(cls.ends_at);
   document.getElementById('release_at').value = toDatetimeLocalValue(cls.release_at);
@@ -445,7 +462,11 @@ function copyClass(cls) {
   document.getElementById('location_url').value = cls.location_url || '';
   document.getElementById('max_participants').value = cls.max_participants ?? '';
   document.getElementById('price_dkk').value = cls.price_dkk ?? '';
-  document.getElementById('payment_options').value = cls.payment_options || 'both';
+  {
+    const po = cls.payment_options || 'both';
+    document.getElementById('pay_mobilepay').checked = po !== 'pay_at_class';
+    document.getElementById('pay_at_class').checked = po !== 'mobilepay';
+  }
   document.getElementById('starts_at').value = '';
   document.getElementById('ends_at').value = '';
   document.getElementById('release_at').value = '';
@@ -462,6 +483,84 @@ async function toggleOpen(id, isOpen) {
     body: JSON.stringify({ is_open: isOpen ? 1 : 0 }),
   });
   loadClasses();
+}
+
+// Loads a script once, on demand (keeps the admin page light).
+function loadScriptOnce(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[data-src="${src}"]`)) return resolve();
+    const el = document.createElement('script');
+    el.src = src;
+    el.dataset.src = src;
+    el.onload = resolve;
+    el.onerror = () => reject(new Error('Could not load ' + src));
+    document.head.appendChild(el);
+  });
+}
+
+// Downloads the confirmed participants of one class as a PDF.
+async function downloadRosterPdf(cls) {
+  try {
+    const res = await fetch(`${API}/classes/${cls.id}/registrations`, { headers: authHeaders() });
+    const rows = await res.json();
+    if (!res.ok) throw new Error(rows.error || t('err_generic'));
+
+    const confirmed = rows.filter((r) => r.status === 'confirmed');
+    if (!confirmed.length) {
+      window.alert(t('pdf_none'));
+      return;
+    }
+
+    await loadScriptOnce('/vendor/jspdf.umd.min.js');
+    await loadScriptOnce('/vendor/jspdf.plugin.autotable.min.js');
+    const { jsPDF } = window.jspdf;
+
+    const locale = getLang() === 'en' ? 'en-GB' : 'da-DK';
+    const methodLabel = (m) => (m === 'pay_at_class' ? t('payment_at_class') : m === 'manual' ? t('payment_manual') : t('payment_mobilepay'));
+    const paidCount = confirmed.filter((r) => r.payment_method === 'mobilepay').length;
+
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    doc.setFontSize(18);
+    doc.text(cls.title || '', 14, 16);
+    doc.setFontSize(10);
+    doc.setTextColor(90);
+    const when = new Date(cls.starts_at).toLocaleString(locale, { dateStyle: 'full', timeStyle: 'short' });
+    doc.text([when, cls.location || ''].filter(Boolean).join('  ·  '), 14, 23);
+    doc.text(
+      t('pdf_summary', { n: confirmed.length, max: cls.max_participants, paid: paidCount, unpaid: confirmed.length - paidCount }),
+      14, 29
+    );
+
+    doc.autoTable({
+      startY: 34,
+      head: [[t('col_owner'), t('col_dog'), t('col_email'), t('col_phone'), t('col_payment'), t('pdf_col_paid'), t('pdf_col_registered')]],
+      body: confirmed.map((r) => [
+        r.owner_name || '',
+        r.dog_name || '',
+        r.email || '',
+        r.phone || '',
+        methodLabel(r.payment_method),
+        r.payment_method === 'mobilepay' ? t('pdf_yes') : t('pdf_no'),
+        new Date(r.created_at).toLocaleString(locale, { dateStyle: 'short', timeStyle: 'short' }),
+      ]),
+      styles: { fontSize: 10, cellPadding: 2.5 },
+      headStyles: { fillColor: [31, 42, 32] },
+      alternateRowStyles: { fillColor: [245, 242, 232] },
+    });
+
+    const pages = doc.getNumberOfPages();
+    for (let i = 1; i <= pages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(120);
+      doc.text(`Hund & Handler Danmark  ·  ${i}/${pages}`, 14, doc.internal.pageSize.getHeight() - 8);
+    }
+
+    const slug = (cls.title || 'hold').toLowerCase().replace(/[^a-z0-9æøå]+/g, '-').replace(/^-|-$/g, '');
+    doc.save(`${slug}-${String(cls.starts_at).slice(0, 10)}.pdf`);
+  } catch (err) {
+    window.alert(err.message);
+  }
 }
 
 async function loadRoster(id) {
