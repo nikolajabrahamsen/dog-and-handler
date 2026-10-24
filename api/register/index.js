@@ -82,7 +82,7 @@ module.exports = async function handler(req, res) {
     const payment = await createPayment({
       amountDkk: cls.price_dkk,
       reference: reg.id,
-      description: `${cls.title} - dog training`.slice(0, 100),
+      description: [cls.title, owner_name, dog_name].filter(Boolean).join(' - ').slice(0, 100),
       returnUrl: `${base}/payment-return.html?reg=${reg.id}`,
     });
 
