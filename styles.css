@@ -403,3 +403,7 @@ a { color: inherit; }
 .terms-page p, .terms-page li { color: var(--bone-dim); font-size: 15px; }
 .terms-page a { color: var(--bone); }
 .terms-back { display: inline-block; margin-top: 8px; color: var(--bone-dim); }
+
+/* Not released yet: visible but greyed out until the release time. */
+.class-card.is-upcoming { opacity: 0.55; filter: grayscale(1); }
+.class-card.is-upcoming::before { background: #8a8a80; }

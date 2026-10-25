@@ -20,6 +20,7 @@ function withComputed(row) {
 
 module.exports = async function handler(req, res) {
   if (req.method === 'GET') {
+    res.setHeader('Cache-Control', 'no-store');
     const { data, error } = await supabase
       .from('class_availability')
       .select('*')
@@ -31,9 +32,10 @@ module.exports = async function handler(req, res) {
     const admin = await requireAdmin(req);
 
     if (!admin) {
-      // Public: never show classes whose end date has passed, or whose
-      // release date hasn't arrived yet.
-      return res.status(200).json(computed.filter((c) => !c.is_expired && !c.not_yet_released));
+      // Public: hide classes whose end date has passed. Classes that are not
+      // released yet ARE returned (the app shows them greyed out until the
+      // release time); the server still refuses registrations before then.
+      return res.status(200).json(computed.filter((c) => !c.is_expired));
     }
 
     // Admin: show all current/upcoming classes (including not-yet-released

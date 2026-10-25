@@ -47,7 +47,7 @@ async function loadClasses(silent = false) {
     listEl.innerHTML = `<p style="color: var(--bone-dim)">${t('loading_classes')}</p>`;
   }
   try {
-    const res = await fetch(`${API}/classes`);
+    const res = await fetch(`${API}/classes`, { cache: 'no-store' });
     const classes = await res.json();
     lastClasses = classes;
 
@@ -56,23 +56,61 @@ async function loadClasses(silent = false) {
       return;
     }
 
-    listEl.innerHTML = classes.map(renderCard).join('');
-
-    listEl.querySelectorAll('[data-register]').forEach((btn) => {
-      btn.addEventListener('click', () => openRegisterModal(btn.dataset.register, classes));
-    });
+    renderClassList();
   } catch (err) {
     if (!silent) listEl.innerHTML = `<div class="empty-state">${t('load_error')}</div>`;
     console.error(err);
   }
 }
 
+// Renders the list from lastClasses and (re)schedules the release timer.
+function renderClassList() {
+  const listEl = document.getElementById('classList');
+  if (!lastClasses.length) {
+    listEl.innerHTML = `<div class="empty-state">${t('no_classes')}</div>`;
+    return;
+  }
+  listEl.innerHTML = lastClasses.map(renderCard).join('');
+  listEl.querySelectorAll('[data-register]').forEach((btn) => {
+    btn.addEventListener('click', () => openRegisterModal(btn.dataset.register, lastClasses));
+  });
+  scheduleReleaseRefresh();
+}
+
+// Decided on the person's own clock, so a class unlocks at the exact release
+// moment even if the app has been open for hours.
+function isNotYetReleased(cls) {
+  return !!cls.release_at && new Date(cls.release_at).getTime() > Date.now();
+}
+
+let releaseTimer = null;
+function scheduleReleaseRefresh() {
+  clearTimeout(releaseTimer);
+  const upcoming = lastClasses
+    .filter(isNotYetReleased)
+    .map((c) => new Date(c.release_at).getTime());
+  if (!upcoming.length) return;
+  const wait = Math.min(Math.min(...upcoming) - Date.now() + 500, 30_000);
+  releaseTimer = setTimeout(() => {
+    if (lastClasses.some((c) => c.release_at && new Date(c.release_at).getTime() <= Date.now() && c._shownLocked)) {
+      loadClasses(true); // a release just passed: refetch fresh data and unlock
+    } else {
+      scheduleReleaseRefresh();
+    }
+  }, Math.max(wait, 500));
+}
+
 function renderCard(cls) {
-  const closed = !cls.registration_open;
+  const upcoming = isNotYetReleased(cls);
+  cls._shownLocked = upcoming;
+  // Open = not manually closed, spots left, not ended, and released (checked locally).
+  const open = !!cls.is_open && cls.spots_left > 0 && !upcoming &&
+    !(cls.ends_at && new Date(cls.ends_at) < new Date());
+  const closed = !open;
   const lowSpots = cls.spots_left > 0 && cls.spots_left <= 3;
 
   return `
-    <article class="class-card ${closed ? 'is-closed' : ''}">
+    <article class="class-card ${upcoming ? 'is-upcoming' : closed ? 'is-closed' : ''}">
       <div class="class-top">
         <div>
           <h3 class="class-title">${escapeHtml(cls.title)}</h3>
@@ -83,11 +121,11 @@ function renderCard(cls) {
       <div class="class-bottom">
         <span class="price">${dkkFormat(cls.price_dkk)}</span>
         <span class="spots ${lowSpots ? 'low' : ''}">
-          ${closed ? t('class_full_label') : tPlural('spots_left', cls.spots_left)}
+          ${upcoming ? t('opens_at_label', { date: formatDate(cls.release_at) }) : closed ? t('class_full_label') : tPlural('spots_left', cls.spots_left)}
         </span>
         ${
           closed
-            ? `<button class="btn btn-disabled" disabled>${t('registration_closed_btn')}</button>`
+            ? `<button class="btn btn-disabled" disabled>${upcoming ? t('opens_soon_btn') : t('registration_closed_btn')}</button>`
             : `<button class="btn btn-primary" data-register="${cls.id}">${t('register_btn')}</button>`
         }
       </div>
@@ -281,13 +319,7 @@ function closeModal() {
 // its text won't update in place.
 window.addEventListener('langchange', () => {
   closeModal();
-  if (lastClasses.length) {
-    const listEl = document.getElementById('classList');
-    listEl.innerHTML = lastClasses.map(renderCard).join('');
-    listEl.querySelectorAll('[data-register]').forEach((btn) => {
-      btn.addEventListener('click', () => openRegisterModal(btn.dataset.register, lastClasses));
-    });
-  }
+  renderClassList();
 });
 
 loadClasses();
