@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hund-og-handler-v4';
+const CACHE_NAME = 'hund-og-handler-v5';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -29,6 +29,9 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
+
+  // Ignore anything that isn't a normal web request (e.g. browser extensions).
+  if (!url.protocol.startsWith('http')) return;
 
   // Never cache API calls - class availability must always be fresh.
   if (url.pathname.startsWith('/api/')) return;

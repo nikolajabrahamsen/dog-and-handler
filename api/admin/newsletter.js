@@ -67,7 +67,8 @@ module.exports = async function handler(req, res) {
       );
     }
 
-    return res.status(200).json({ sent, failed });
+    const firstError = results.find((r) => r.status === 'rejected')?.reason?.message || null;
+    return res.status(200).json({ sent, failed, first_error: firstError });
   }
 
   res.setHeader('Allow', 'GET, POST');

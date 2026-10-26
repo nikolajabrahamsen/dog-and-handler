@@ -655,7 +655,9 @@ document.getElementById('newsletterForm').addEventListener('submit', async (e) =
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || t('err_generic'));
 
-    msg.textContent = data.sent != null ? `${data.sent} / ${data.sent + data.failed}` : data.message;
+    msg.textContent = data.sent != null
+      ? `${data.sent} / ${data.sent + data.failed}${data.first_error ? ' – ' + data.first_error : ''}`
+      : data.message;
     msg.style.color = data.failed ? 'var(--clay)' : 'var(--brass-bright)';
     msg.hidden = false;
     e.target.reset();
