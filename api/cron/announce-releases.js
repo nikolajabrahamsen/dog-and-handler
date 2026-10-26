@@ -4,7 +4,7 @@ const { unsubscribeUrl } = require('../../lib/unsubscribe');
 const { buildEmailMapUrl } = require('../../lib/mapLink');
 const { requestBaseUrl } = require('../../lib/http');
 
-const DATE_FORMAT = { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' };
+const DATE_FORMAT = { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Copenhagen' };
 
 function formatDkk(amount) {
   return new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK', maximumFractionDigits: 0 }).format(amount);
