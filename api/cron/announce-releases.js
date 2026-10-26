@@ -68,6 +68,7 @@ module.exports = async function handler(req, res) {
   let subscribersEmailed = 0;
 
   for (const [releaseAt, classes] of groups) {
+    let sentThisGroup = 0;
     if (subscribers.length > 0) {
       const releaseDateStr = new Date(releaseAt).toLocaleString('da-DK', DATE_FORMAT);
       const classListHtml = classes.map((cls) => `
@@ -107,13 +108,18 @@ module.exports = async function handler(req, res) {
         })
       );
 
-      subscribersEmailed += results.filter((r) => r.status === 'fulfilled').length;
+      sentThisGroup = results.filter((r) => r.status === 'fulfilled').length;
+      subscribersEmailed += sentThisGroup;
       const failed = results.filter((r) => r.status === 'rejected');
       if (failed.length) console.error('Release announcement send failures:', failed.map((r) => r.reason?.message));
     }
 
-    // Mark all classes in this group as announced, whether or not there
-    // were any subscribers to send to - avoids re-processing next run.
+    // Every send failed (e.g. email not set up / domain not verified):
+    // do NOT mark as announced, so the next run (every 5 min, while the
+    // release is still within the window) tries again.
+    if (subscribers.length > 0 && sentThisGroup === 0) continue;
+
+    // Mark as announced (also when there were no subscribers to send to).
     await supabase
       .from('classes')
       .update({ release_announced_at: new Date().toISOString() })

@@ -15,5 +15,7 @@ jobs:
     steps:
       - name: Call the release-announcement endpoint
         run: |
-          curl -sf -X POST "${{ secrets.APP_URL }}/api/cron/announce-releases" \
+          # Print the server's answer and fail the job on any non-2xx status,
+          # so a wrong secret or a server error is visible in the Actions log.
+          curl -sS --fail-with-body -X POST "${{ secrets.APP_URL }}/api/cron/announce-releases" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
