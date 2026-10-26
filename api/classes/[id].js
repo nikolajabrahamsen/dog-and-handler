@@ -1,5 +1,6 @@
 const { supabase } = require('../../lib/supabase');
 const { requireAdmin } = require('../../lib/http');
+const classRegistrations = require('../../lib/handlers/classRegistrations');
 
 function withComputed(row) {
   const spotsLeft = Math.max(0, row.max_participants - row.held_count);
@@ -17,6 +18,9 @@ function withComputed(row) {
 }
 
 module.exports = async function handler(req, res) {
+  // /api/classes/:id/registrations is rewritten to ?action=registrations (see vercel.json)
+  if (req.query.action === 'registrations') return classRegistrations(req, res);
+
   const { id } = req.query;
 
   if (req.method === 'GET') {

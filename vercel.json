@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    { "source": "/api/unsubscribe", "destination": "/api/newsletter-public?action=unsubscribe" },
+    { "source": "/api/newsletter/subscribe", "destination": "/api/newsletter-public?action=subscribe" },
+    { "source": "/api/newsletter/confirm", "destination": "/api/newsletter-public?action=confirm" },
+    { "source": "/api/admin/registrations/:id/move", "destination": "/api/admin/registrations/:id?action=move" },
+    { "source": "/api/classes/:id/registrations", "destination": "/api/classes/:id?action=registrations" }
+  ]
+}
