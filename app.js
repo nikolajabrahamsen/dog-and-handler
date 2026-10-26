@@ -262,10 +262,17 @@ function openRegisterModal(classIds, classes) {
             <label for="owner_name">${t('field_owner_name')}</label>
             <input id="owner_name" name="owner_name" required autocomplete="name" />
           </div>
+          ${multi
+            ? selected.map((c) => `
+          <div class="field">
+            <label for="dog_${c.id}">${t('field_dog_name')} – ${escapeHtml(c.title)}</label>
+            <input id="dog_${c.id}" name="dog_${c.id}" autocomplete="off" />
+          </div>`).join('')
+            : `
           <div class="field">
             <label for="dog_name">${t('field_dog_name')}</label>
             <input id="dog_name" name="dog_name" autocomplete="off" />
-          </div>
+          </div>`}
           <div class="field">
             <label for="email">${t('field_email')}</label>
             <input id="email" name="email" type="email" required autocomplete="email" />
@@ -355,7 +362,11 @@ function openRegisterModal(classIds, classes) {
     const payload = {
       class_ids: selected.map((c) => c.id),
       owner_name: formData.get('owner_name'),
-      dog_name: formData.get('dog_name'),
+      dog_name: multi ? null : formData.get('dog_name'),
+      // One dog name per class (a different dog can go to each class).
+      dog_names: multi
+        ? Object.fromEntries(selected.map((c) => [c.id, (formData.get(`dog_${c.id}`) || '').trim()]))
+        : undefined,
       email: formData.get('email'),
       phone: formData.get('phone'),
       payment_method: paymentMethod,

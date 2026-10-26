@@ -18,7 +18,9 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { owner_name, dog_name, email, phone } = req.body || {};
+  const { owner_name, email, phone } = req.body || {};
+  const dogNames = req.body?.dog_names && typeof req.body.dog_names === 'object' ? req.body.dog_names : {};
+  const dog_name = typeof req.body?.dog_name === 'string' ? req.body.dog_name : '';
   const payment_method = req.body?.payment_method === 'pay_at_class' ? 'pay_at_class' : 'mobilepay';
   const newsletter_opt_in = req.body?.newsletter_opt_in === true;
 
@@ -71,6 +73,13 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'Could not create registration' });
   }
 
+  // Each class can have its own dog; fall back to the single dog name.
+  for (const reg of regs) {
+    const name = String(dogNames[reg.class_id] ?? dog_name ?? '').trim().slice(0, 100) || null;
+    reg.dog_name = name;
+    await supabase.from('registrations').update({ dog_name: name }).eq('id', reg.id);
+  }
+
   const groupId = regs[0].group_id;
   const classMap = Object.fromEntries(classes.map((c) => [c.id, c]));
   const base = requestBaseUrl(req);
@@ -103,7 +112,7 @@ module.exports = async function handler(req, res) {
     const payment = await createPayment({
       amountDkk: total,
       reference: groupId,
-      description: [titles, owner_name, dog_name].filter(Boolean).join(' - ').slice(0, 100),
+      description: [titles, owner_name, [...new Set(regs.map((r) => r.dog_name).filter(Boolean))].join(', ')].filter(Boolean).join(' - ').slice(0, 100),
       returnUrl,
     });
 
