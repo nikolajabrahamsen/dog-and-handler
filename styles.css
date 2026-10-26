@@ -426,3 +426,15 @@ a { color: inherit; }
 .sel-list li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid #d8d0b8; font-size: 14px; }
 .sel-list li small { display: block; color: #6b6650; font-size: 12px; }
 .sel-list .sel-total { font-weight: 700; border-top: 2px solid #22201B; }
+
+/* ---- Front-page newsletter signup ---- */
+.newsletter-signup { max-width: 520px; margin: 48px auto 0; padding: 24px 20px; text-align: center; border: 1px solid rgba(200,155,60,0.35); border-radius: var(--radius); background: var(--pine-deep); }
+.newsletter-signup h2 { font-family: var(--font-display); margin: 0 0 6px; }
+.newsletter-signup p { color: var(--bone-dim); margin: 0 0 14px; }
+.newsletter-signup form { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.newsletter-signup input[type="email"] { flex: 1 1 220px; min-width: 0; padding: 11px 14px; border-radius: 999px; border: 1px solid #d8d0b8; background: #F3EEE1; color: #22201B; font-size: 15px; }
+.newsletter-signup .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.newsletter-signup .nl-msg { margin: 12px 0 0; font-size: 14px; }
+.newsletter-signup .nl-msg.ok { color: var(--brass-bright); }
+.newsletter-signup .nl-msg.err { color: var(--clay); }
+.newsletter-signup .nl-note { font-size: 12px; margin: 10px 0 0; }

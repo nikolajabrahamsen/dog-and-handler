@@ -35,6 +35,18 @@
       <p style="color: var(--bone-dim)" data-i18n="loading_classes">Indlæser hold…</p>
     </div>
   </main>
+
+  <section class="newsletter-signup" aria-labelledby="nlHeading">
+    <h2 id="nlHeading" data-i18n="nl_signup_heading">Hold dig opdateret</h2>
+    <p data-i18n="nl_signup_text">Få en mail, når nye hold åbner for tilmelding.</p>
+    <form id="nlForm" novalidate>
+      <input type="email" id="nlEmail" name="email" required autocomplete="email" data-i18n-placeholder="nl_signup_email_placeholder" placeholder="Din e-mail" />
+      <input type="text" name="website" id="nlWebsite" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp-field" />
+      <button type="submit" class="btn btn-primary" id="nlBtn" data-i18n="nl_signup_btn">Tilmeld nyhedsbrev</button>
+    </form>
+    <p class="nl-msg" id="nlMsg" hidden></p>
+    <p class="nl-note" data-i18n="nl_signup_note">Du kan altid afmelde dig igen.</p>
+  </section>
 </div>
 
 <footer id="siteFooter" class="site-footer"></footer>

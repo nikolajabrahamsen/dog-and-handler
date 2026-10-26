@@ -432,3 +432,37 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(console.error);
   });
 }
+
+
+// ---- Front-page newsletter signup (double opt-in, no class needed) ----
+(function () {
+  const form = document.getElementById('nlForm');
+  if (!form) return;
+  const msg = document.getElementById('nlMsg');
+  const btn = document.getElementById('nlBtn');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    msg.hidden = true;
+    const email = document.getElementById('nlEmail').value.trim();
+    if (!email) return;
+    btn.disabled = true;
+    btn.textContent = t('nl_signup_sending');
+    try {
+      const res = await fetch(`${API}/newsletter/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, website: document.getElementById('nlWebsite').value }),
+      });
+      if (!res.ok) throw new Error('failed');
+      msg.textContent = t('nl_signup_ok');
+      msg.className = 'nl-msg ok';
+      form.reset();
+    } catch {
+      msg.textContent = t('nl_signup_error');
+      msg.className = 'nl-msg err';
+    }
+    msg.hidden = false;
+    btn.disabled = false;
+    btn.textContent = t('nl_signup_btn');
+  });
+})();

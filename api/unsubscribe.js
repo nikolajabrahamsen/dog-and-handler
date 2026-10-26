@@ -45,13 +45,20 @@ module.exports = async function handler(req, res) {
     ));
   }
 
+  // Escape LIKE wildcards (_ % \\) so an address like "a_b@x.dk" can't match others.
+  const likeSafe = email.replace(/[\\%_]/g, (c) => '\\' + c);
   const { error } = await supabase
     .from('registrations')
     .update({ newsletter_opt_in: false })
-    .ilike('email', email);
+    .ilike('email', likeSafe);
+  // Also remove a front-page signup for this address.
+  const { error: signupError } = await supabase
+    .from('newsletter_signups')
+    .delete()
+    .eq('email', email.toLowerCase().trim());
 
-  if (error) {
-    console.error('Unsubscribe update failed:', error);
+  if (error || signupError) {
+    console.error('Unsubscribe update failed:', error || signupError);
     return res.status(500).send(page('Noget gik galt', 'Vi kunne ikke gennemføre afmeldingen lige nu. Prøv igen om lidt.'));
   }
 
