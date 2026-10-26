@@ -1,7 +1,7 @@
 const { supabase } = require('../../lib/supabase');
 const { createPayment } = require('../../lib/mobilepay');
 const { requestBaseUrl } = require('../../lib/http');
-const { sendRegistrationConfirmationEmail } = require('../../lib/registrationEmail');
+const { sendGroupConfirmationEmail } = require('../../lib/registrationEmail');
 
 const ERROR_MESSAGES = {
   class_not_found: { status: 404, message: 'Class not found' },
@@ -9,92 +9,113 @@ const ERROR_MESSAGES = {
   class_full: { status: 409, message: 'This class just filled up' },
 };
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const MAX_CLASSES_PER_ORDER = 10;
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { class_id, owner_name, dog_name, email, phone } = req.body || {};
+  const { owner_name, dog_name, email, phone } = req.body || {};
   const payment_method = req.body?.payment_method === 'pay_at_class' ? 'pay_at_class' : 'mobilepay';
   const newsletter_opt_in = req.body?.newsletter_opt_in === true;
 
-  if (!class_id || !owner_name || !email || !phone) {
-    return res.status(400).json({ error: 'class_id, owner_name, email and phone are required' });
+  // One or several classes. `class_id` (single) is still accepted.
+  let classIds = Array.isArray(req.body?.class_ids) ? req.body.class_ids : (req.body?.class_id ? [req.body.class_id] : []);
+  classIds = [...new Set(classIds.map(String))];
+
+  if (!classIds.length || !owner_name || !email || !phone) {
+    return res.status(400).json({ error: 'class_ids, owner_name, email and phone are required' });
+  }
+  if (classIds.length > MAX_CLASSES_PER_ORDER || !classIds.every((id) => UUID_RE.test(id))) {
+    return res.status(400).json({ error: 'Invalid class selection' });
   }
 
-  // Enforce the payment methods the admin allowed for this class.
-  const { data: clsOpts } = await supabase.from('classes').select('payment_options').eq('id', class_id).single();
-  const allowed = clsOpts?.payment_options || 'both';
-  if (allowed !== 'both' && allowed !== payment_method) {
+  // Enforce the payment methods the admin allowed for every selected class.
+  const { data: classes } = await supabase.from('classes').select('*').in('id', classIds);
+  if (!classes || classes.length !== classIds.length) {
+    return res.status(404).json({ error: 'Class not found' });
+  }
+  const notAllowed = classes.some((c) => {
+    const allowed = c.payment_options || 'both';
+    return allowed !== 'both' && allowed !== payment_method;
+  });
+  if (notAllowed) {
     return res.status(400).json({ error: 'This payment method is not available for this class' });
   }
 
-  // Atomic, race-safe capacity check + insert (see supabase/schema.sql).
-  const { data: reg, error: rpcError } = await supabase
-    .rpc('create_registration', {
-      p_class_id: class_id,
-      p_owner_name: owner_name,
-      p_dog_name: dog_name || null,
-      p_email: email,
-      p_phone: phone,
-      p_payment_method: payment_method,
-      p_newsletter_opt_in: newsletter_opt_in,
-    })
-    .single();
+  // Atomic, race-safe capacity check + insert for ALL classes at once.
+  // If any class is full/closed, nothing at all is reserved.
+  const { data: regs, error: rpcError } = await supabase.rpc('create_registration_group', {
+    p_class_ids: classIds,
+    p_owner_name: owner_name,
+    p_dog_name: dog_name || null,
+    p_email: email,
+    p_phone: phone,
+    p_payment_method: payment_method,
+    p_newsletter_opt_in: newsletter_opt_in,
+  });
 
-  if (rpcError) {
-    const message = rpcError.message || '';
+  if (rpcError || !regs || !regs.length) {
+    const message = rpcError?.message || '';
     const known = Object.keys(ERROR_MESSAGES).find((code) => message.includes(code));
     if (known) {
       const { status, message: friendly } = ERROR_MESSAGES[known];
-      return res.status(status).json({ error: friendly });
+      const badId = (message.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i) || [])[0];
+      const bad = classes.find((c) => c.id === badId);
+      return res.status(status).json({ error: friendly, class_title: bad?.title || null });
     }
-    console.error('create_registration error:', rpcError);
+    console.error('create_registration_group error:', rpcError);
     return res.status(500).json({ error: 'Could not create registration' });
   }
 
+  const groupId = regs[0].group_id;
+  const classMap = Object.fromEntries(classes.map((c) => [c.id, c]));
   const base = requestBaseUrl(req);
-  const { data: cls } = await supabase.from('classes').select('*').eq('id', class_id).single();
+  const returnUrl = `${base}/payment-return.html?group=${groupId}`;
 
-  // --- Pay at class: confirm the seat immediately, no MobilePay involved. ---
+  // --- Pay at class: confirm every seat immediately, no MobilePay involved. ---
   if (payment_method === 'pay_at_class') {
-    const { data: confirmed, error: confirmError } = await supabase
-      .rpc('confirm_registration', { p_reg_id: reg.id })
-      .single();
-    if (confirmError) {
-      console.error('confirm_registration error:', confirmError);
+    const confirmedRegs = [];
+    for (const reg of regs) {
+      const { data: confirmed, error: confirmError } = await supabase
+        .rpc('confirm_registration', { p_reg_id: reg.id })
+        .single();
+      if (confirmError) {
+        console.error('confirm_registration error:', confirmError);
+        continue;
+      }
+      if (confirmed?.status === 'confirmed') confirmedRegs.push(confirmed);
+    }
+    if (!confirmedRegs.length) {
       return res.status(500).json({ error: 'Could not confirm registration' });
     }
-    if (confirmed?.status === 'confirmed' && cls) {
-      await sendRegistrationConfirmationEmail(confirmed, cls);
-    }
-    // Reuse the same "confirming your spot" page - it polls status and will
-    // immediately show the confirmed state since the seat is already booked.
-    return res.status(201).json({
-      registration_id: reg.id,
-      redirect_url: `${base}/payment-return.html?reg=${reg.id}`,
-    });
+    await sendGroupConfirmationEmail(confirmedRegs, classMap);
+    return res.status(201).json({ registration_id: groupId, group_id: groupId, redirect_url: returnUrl });
   }
 
-  // --- MobilePay: create the payment and send the customer to approve it. ---
+  // --- MobilePay: ONE payment for the total; reference = group id. ---
   try {
+    const total = classes.reduce((sum, c) => sum + Number(c.price_dkk || 0), 0);
+    const titles = regs.map((r) => classMap[r.class_id]?.title).filter(Boolean).join(' + ');
     const payment = await createPayment({
-      amountDkk: cls.price_dkk,
-      reference: reg.id,
-      description: [cls.title, owner_name, dog_name].filter(Boolean).join(' - ').slice(0, 100),
-      returnUrl: `${base}/payment-return.html?reg=${reg.id}`,
+      amountDkk: total,
+      reference: groupId,
+      description: [titles, owner_name, dog_name].filter(Boolean).join(' - ').slice(0, 100),
+      returnUrl,
     });
 
     await supabase
       .from('registrations')
-      .update({ mobilepay_payment_id: payment.reference || reg.id, mobilepay_reference: reg.id })
-      .eq('id', reg.id);
+      .update({ mobilepay_payment_id: payment.reference || groupId, mobilepay_reference: groupId })
+      .eq('group_id', groupId);
 
-    return res.status(201).json({ registration_id: reg.id, redirect_url: payment.redirectUrl });
+    return res.status(201).json({ registration_id: groupId, group_id: groupId, redirect_url: payment.redirectUrl });
   } catch (err) {
     console.error('MobilePay payment creation failed:', err);
-    await supabase.from('registrations').update({ status: 'failed' }).eq('id', reg.id);
+    await supabase.from('registrations').update({ status: 'failed' }).eq('group_id', groupId);
     return res.status(502).json({ error: 'Could not start MobilePay payment. Please try again.' });
   }
 };

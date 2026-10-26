@@ -23,7 +23,7 @@
 <script>
   const API = '/api';
   const params = new URLSearchParams(window.location.search);
-  const regId = params.get('reg');
+  const regId = params.get('group') || params.get('reg');
 
   const titleEl = document.getElementById('statusTitle');
   const bodyEl = document.getElementById('statusBody');
@@ -38,6 +38,22 @@
   }
 
   let lastState = null;
+
+  // With several classes in one order, list them under the message.
+  function showClassList(classes) {
+    const old = document.getElementById('classListOut');
+    if (old) old.remove();
+    if (!classes || classes.length < 2) return;
+    const ul = document.createElement('ul');
+    ul.id = 'classListOut';
+    ul.style.cssText = 'text-align:left; margin:14px auto 0; max-width:320px; padding-left:20px;';
+    classes.forEach((c) => {
+      const li = document.createElement('li');
+      li.textContent = (c.status === 'confirmed' ? '✅ ' : '⚠️ ') + c.title;
+      ul.appendChild(li);
+    });
+    bodyEl.insertAdjacentElement('afterend', ul);
+  }
 
   async function poll(attempt = 0) {
     if (!regId) {
@@ -54,6 +70,14 @@
         const bodyKey = reg.payment_method === 'pay_at_class' ? 'confirmed_body_pay_at_class' : 'confirmed_body_mobilepay';
         setStatus('✅', 'confirmed_title', bodyKey);
         lastState = ['confirmed_title', bodyKey, '✅'];
+        showClassList(reg.classes);
+        return;
+      }
+
+      if (reg.status === 'partial') {
+        setStatus('⚠️', 'partial_title', 'partial_body');
+        lastState = ['partial_title', 'partial_body', '⚠️'];
+        showClassList(reg.classes);
         return;
       }
 

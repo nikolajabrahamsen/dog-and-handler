@@ -40,6 +40,7 @@ function translateApiError(message) {
 }
 
 let lastClasses = [];
+const selectedIds = new Set(); // classes the visitor has ticked for one combined registration
 
 async function loadClasses(silent = false) {
   const listEl = document.getElementById('classList');
@@ -68,13 +69,55 @@ function renderClassList() {
   const listEl = document.getElementById('classList');
   if (!lastClasses.length) {
     listEl.innerHTML = `<div class="empty-state">${t('no_classes')}</div>`;
+    selectedIds.clear();
+    updateSelectionBar();
     return;
   }
-  listEl.innerHTML = lastClasses.map(renderCard).join('');
-  listEl.querySelectorAll('[data-register]').forEach((btn) => {
-    btn.addEventListener('click', () => openRegisterModal(btn.dataset.register, lastClasses));
+  // Drop selections that are no longer bookable (filled up, closed, ...).
+  [...selectedIds].forEach((id) => {
+    const c = lastClasses.find((x) => x.id === id);
+    if (!c || !isBookable(c)) selectedIds.delete(id);
   });
+  listEl.innerHTML = lastClasses.map(renderCard).join('');
+  listEl.querySelectorAll('[data-toggle]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.toggle;
+      if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id);
+      renderClassList();
+    });
+  });
+  updateSelectionBar();
   scheduleReleaseRefresh();
+}
+
+function isBookable(cls) {
+  return !!cls.is_open && cls.spots_left > 0 && !isNotYetReleased(cls) &&
+    !(cls.ends_at && new Date(cls.ends_at) < new Date());
+}
+
+function updateSelectionBar() {
+  const bar = document.getElementById('selectionBar');
+  if (!bar) return;
+  const chosen = lastClasses.filter((c) => selectedIds.has(c.id));
+  if (!chosen.length) {
+    bar.hidden = true;
+    bar.innerHTML = '';
+    return;
+  }
+  const total = chosen.reduce((sum, c) => sum + Number(c.price_dkk || 0), 0);
+  bar.hidden = false;
+  bar.innerHTML = `
+    <span class="selection-summary">${t('selection_summary', { n: chosen.length, total: dkkFormat(total) })}</span>
+    <button type="button" class="btn-link" id="clearSelectionBtn">${t('selection_clear_btn')}</button>
+    <button type="button" class="btn btn-primary" id="continueBtn">${t('selection_continue_btn')}</button>
+  `;
+  document.getElementById('clearSelectionBtn').addEventListener('click', () => {
+    selectedIds.clear();
+    renderClassList();
+  });
+  document.getElementById('continueBtn').addEventListener('click', () => {
+    openRegisterModal(chosen.map((c) => c.id), lastClasses);
+  });
 }
 
 // Decided on the person's own clock, so a class unlocks at the exact release
@@ -104,13 +147,13 @@ function renderCard(cls) {
   const upcoming = isNotYetReleased(cls);
   cls._shownLocked = upcoming;
   // Open = not manually closed, spots left, not ended, and released (checked locally).
-  const open = !!cls.is_open && cls.spots_left > 0 && !upcoming &&
-    !(cls.ends_at && new Date(cls.ends_at) < new Date());
+  const open = isBookable(cls);
+  const picked = selectedIds.has(cls.id);
   const closed = !open;
   const lowSpots = cls.spots_left > 0 && cls.spots_left <= 3;
 
   return `
-    <article class="class-card ${upcoming ? 'is-upcoming' : closed ? 'is-closed' : ''}">
+    <article class="class-card ${upcoming ? 'is-upcoming' : closed ? 'is-closed' : ''} ${picked ? 'is-picked' : ''}">
       <div class="class-top">
         <div>
           <h3 class="class-title">${escapeHtml(cls.title)}</h3>
@@ -126,7 +169,7 @@ function renderCard(cls) {
         ${
           closed
             ? `<button class="btn btn-disabled" disabled>${upcoming ? t('opens_soon_btn') : t('registration_closed_btn')}</button>`
-            : `<button class="btn btn-primary" data-register="${cls.id}">${t('register_btn')}</button>`
+            : `<button class="btn ${picked ? 'btn-selected' : 'btn-primary'}" data-toggle="${cls.id}" aria-pressed="${picked}">${picked ? t('selected_btn') : t('select_btn')}</button>`
         }
       </div>
     </article>
@@ -169,18 +212,50 @@ function locationHtml(cls) {
   return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener" class="map-link">${label}</a>`;
 }
 
-function openRegisterModal(classId, classes) {
-  const cls = classes.find((c) => c.id === classId);
-  if (!cls) return;
+function openRegisterModal(classIds, classes) {
+  const ids = Array.isArray(classIds) ? classIds : [classIds];
+  const selected = ids.map((id) => classes.find((c) => c.id === id)).filter(Boolean);
+  if (!selected.length) return;
+  const cls = selected[0];
+  const multi = selected.length > 1;
+  const total = selected.reduce((sum, c) => sum + Number(c.price_dkk || 0), 0);
 
-  const opts = cls.payment_options || 'both';
+  // Payment methods every selected class accepts.
+  const canMobile = selected.every((c) => (c.payment_options || 'both') !== 'pay_at_class');
+  const canClass = selected.every((c) => (c.payment_options || 'both') !== 'mobilepay');
+  const opts = canMobile && canClass ? 'both' : canMobile ? 'mobilepay' : 'pay_at_class';
   const defaultMethod = opts === 'pay_at_class' ? 'pay_at_class' : 'mobilepay';
+  const conflict = !canMobile && !canClass;
+
   const root = document.getElementById('modalRoot');
+
+  if (conflict) {
+    root.innerHTML = `
+      <div class="modal-backdrop" id="backdrop">
+        <div class="modal" role="dialog" aria-modal="true">
+          <h3>${t('multi_modal_title', { n: selected.length })}</h3>
+          <p class="sub">${t('err_methods_conflict')}</p>
+          <div class="modal-actions"><button type="button" class="btn btn-secondary" id="cancelBtn">${t('cancel_btn')}</button></div>
+        </div>
+      </div>`;
+    document.getElementById('cancelBtn').addEventListener('click', closeModal);
+    document.getElementById('backdrop').addEventListener('click', (e) => { if (e.target.id === 'backdrop') closeModal(); });
+    return;
+  }
+
+  const headHtml = multi
+    ? `<h3 id="modalTitle">${t('multi_modal_title', { n: selected.length })}</h3>
+       <ul class="sel-list">
+         ${selected.map((c) => `<li><span>${escapeHtml(c.title)}<small>${formatDate(c.starts_at)}</small></span><span>${dkkFormat(c.price_dkk)}</span></li>`).join('')}
+         <li class="sel-total"><span>${t('modal_total_label')}</span><span>${dkkFormat(total)}</span></li>
+       </ul>`
+    : `<h3 id="modalTitle">${escapeHtml(cls.title)}</h3>
+       <p class="sub">${tPlural('modal_price_spots', cls.spots_left, { price: dkkFormat(cls.price_dkk) })}</p>`;
+
   root.innerHTML = `
     <div class="modal-backdrop" id="backdrop">
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-        <h3 id="modalTitle">${escapeHtml(cls.title)}</h3>
-        <p class="sub">${tPlural('modal_price_spots', cls.spots_left, { price: dkkFormat(cls.price_dkk) })}</p>
+        ${headHtml}
 
         <form id="regForm">
           <div class="field">
@@ -278,7 +353,7 @@ function openRegisterModal(classId, classes) {
     payBtn.textContent = paymentMethod === 'pay_at_class' ? t('confirming_btn') : t('starting_payment_btn');
 
     const payload = {
-      class_id: cls.id,
+      class_ids: selected.map((c) => c.id),
       owner_name: formData.get('owner_name'),
       dog_name: formData.get('dog_name'),
       email: formData.get('email'),
@@ -296,7 +371,8 @@ function openRegisterModal(classId, classes) {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(translateApiError(data.error));
+        const base = translateApiError(data.error);
+        throw new Error(data.class_title ? `${base}: ${data.class_title}` : base);
       }
 
       // MobilePay -> their app to approve payment. Pay-at-class -> our own
