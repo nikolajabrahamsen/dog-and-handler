@@ -31,8 +31,12 @@
     border-radius: 6px;
   }
   .btn-delete:hover { background: rgba(181,83,60,0.2); color: var(--clay); }
-  .btn-danger { color: var(--clay); border-color: rgba(181,83,60,0.4); }
-  .btn-danger:hover { background: rgba(181,83,60,0.15); }
+  /* Admin only: every button is a solid gold pill like "Opret hold";
+     delete buttons are red. The DA/EN language switcher is left alone. */
+  .btn-secondary { background: var(--brass); border: none; color: var(--pine-deep); }
+  .btn-secondary:hover { background: var(--brass-bright); }
+  .btn-secondary.btn-danger { background: var(--clay); color: #fff; }
+  .btn-secondary.btn-danger:hover { background: var(--clay); filter: brightness(1.15); }
   .admin-logo { height: 34px; width: auto; border-radius: 4px; }
   .field-note { color: var(--bone-dim) !important; }
   .old-classes-heading {
