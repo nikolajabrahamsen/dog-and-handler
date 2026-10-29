@@ -11,7 +11,7 @@ const TRANSLATIONS = {
   da: {
     page_title: 'Hund & Handler',
     tagline: 'Nye hold hver måned',
-    hero_intro: 'Vælg et hold, tilmeld din hund, og betal sikkert med MobilePay eller ved fremmøde. Din plads er bekræftet, så snart betalingen er på plads.',
+    hero_intro: 'Vælg et hold, tilmeld din hund, og betal sikkert med MobilePay. Din plads er bekræftet, så snart betalingen er på plads.',
     classes_heading: 'Månedens hold',
     loading_classes: 'Indlæser hold…',
     no_classes: 'Der er ingen åbne hold lige nu — kig forbi igen snart.',
@@ -203,7 +203,7 @@ const TRANSLATIONS = {
   en: {
     page_title: 'Hund & Handler',
     tagline: 'New classes every month',
-    hero_intro: 'Pick a class, register your dog, and pay securely with MobilePay or at class. Your spot is confirmed the moment payment is settled.',
+    hero_intro: 'Pick a class, register your dog, and pay securely with MobilePay. Your spot is confirmed the moment payment is settled.',
     classes_heading: "This month's classes",
     loading_classes: 'Loading classes…',
     no_classes: "No classes are open yet — check back soon.",
