@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Hund &amp; Handler</title>
 <meta name="description" content="Tilmeld dig månedens hundetræningshold" />
-<link rel="manifest" href="/manifest.json" />
 <meta name="theme-color" content="#1F2A20" />
 <link rel="icon" href="/icons/favicon.png" />
 <link rel="apple-touch-icon" href="/icons/icon-192.png" />
@@ -15,11 +14,23 @@
 
 <div id="langSwitcher"></div>
 
+<div id="inAppNotice" class="inapp-notice" role="alert" hidden>
+  <strong data-i18n="inapp_title">Åbn siden i din almindelige browser</strong>
+  <p data-i18n="inapp_text"></p>
+  <p data-i18n="inapp_ios"></p>
+  <p data-i18n="inapp_android"></p>
+  <div class="inapp-actions">
+    <button type="button" class="btn btn-primary" id="inAppCopy" data-i18n="inapp_copy_btn">Kopiér link</button>
+    <button type="button" class="btn-link" id="inAppClose" data-i18n="inapp_close">Luk</button>
+  </div>
+  <p id="inAppCopied" hidden></p>
+</div>
+
 <div class="wrap">
   <header class="hero">
     <img class="hero-logo" src="/icons/logo.png" alt="Hund &amp; Handler" />
     <span class="eyebrow" data-i18n="tagline">Nye hold hver måned</span>
-    <p data-i18n="hero_intro">Vælg et hold, tilmeld din hund, og betal sikkert med MobilePay. Din plads er bekræftet, så snart betalingen er på plads.</p>
+    <p data-i18n="hero_intro">Vælg et hold, tilmeld din hund, og betal sikkert med MobilePay eller ved fremmøde. Din plads er bekræftet, så snart betalingen er på plads.</p>
   </header>
 
   <div class="lead-line" aria-hidden="true">

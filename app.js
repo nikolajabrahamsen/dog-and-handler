@@ -466,3 +466,30 @@ if ('serviceWorker' in navigator) {
     btn.textContent = t('nl_signup_btn');
   });
 })();
+
+
+// ---- Facebook / Instagram / Messenger in-app browser notice ----
+// These built-in browsers can drop the page or hide the bottom bar, so ask
+// the visitor to open the page in their normal browser instead.
+(function inAppNotice() {
+  const ua = navigator.userAgent || '';
+  if (!/FBAN|FBAV|FB_IAB|FBIOS|Instagram|Messenger/i.test(ua)) return;
+  try { if (sessionStorage.getItem('inAppNoticeClosed') === '1') return; } catch (e) { /* storage unavailable */ }
+  const box = document.getElementById('inAppNotice');
+  if (!box) return;
+  box.hidden = false;
+  document.getElementById('inAppClose').addEventListener('click', () => {
+    box.hidden = true;
+    try { sessionStorage.setItem('inAppNoticeClosed', '1'); } catch (e) { /* ignore */ }
+  });
+  document.getElementById('inAppCopy').addEventListener('click', async () => {
+    const msg = document.getElementById('inAppCopied');
+    try {
+      await navigator.clipboard.writeText(location.origin + '/');
+      msg.textContent = t('inapp_copied');
+    } catch (e) {
+      msg.textContent = location.origin + '/';
+    }
+    msg.hidden = false;
+  });
+})();

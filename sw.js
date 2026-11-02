@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hund-og-handler-v5';
+const CACHE_NAME = 'hund-og-handler-v6';
 const APP_SHELL = [
   '/',
   '/index.html',
