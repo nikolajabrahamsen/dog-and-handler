@@ -440,7 +440,7 @@ a { color: inherit; }
 .newsletter-signup .nl-note { font-size: 12px; margin: 10px 0 0; }
 
 /* ---- Notice shown inside Facebook/Instagram/Messenger's built-in browser ---- */
-.inapp-notice { margin: 0; padding: 14px 16px; background: var(--brass); color: var(--ink); text-align: center; }
+.inapp-notice { margin: 0; padding: 64px 16px 14px; background: var(--brass); color: var(--ink); text-align: center; }
 .inapp-notice[hidden] { display: none; }
 .inapp-notice p { margin: 6px 0 0; font-size: 14px; }
 .inapp-notice .inapp-actions { display: flex; gap: 14px; align-items: center; justify-content: center; margin-top: 10px; }
