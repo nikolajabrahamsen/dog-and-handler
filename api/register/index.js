@@ -108,11 +108,18 @@ module.exports = async function handler(req, res) {
   // --- MobilePay: ONE payment for the total; reference = group id. ---
   try {
     const total = classes.reduce((sum, c) => sum + Number(c.price_dkk || 0), 0);
-    const titles = regs.map((r) => classMap[r.class_id]?.title).filter(Boolean).join(' + ');
+    // Short MobilePay message: "Owner name - onsdag kl 19, torsdag kl 20" (Danish time)
+    const dayFmt = new Intl.DateTimeFormat('da-DK', { weekday: 'long', timeZone: 'Europe/Copenhagen' });
+    const timeFmt = new Intl.DateTimeFormat('da-DK', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Europe/Copenhagen' });
+    const slots = regs.map((r) => classMap[r.class_id]?.starts_at).filter(Boolean).map((iso) => {
+      const d = new Date(iso);
+      const [hh, mm] = timeFmt.format(d).split(/[.:]/);
+      return `${dayFmt.format(d)} kl ${Number(hh)}${mm && mm !== '00' ? ':' + mm : ''}`;
+    });
     const payment = await createPayment({
       amountDkk: total,
       reference: groupId,
-      description: [titles, owner_name, [...new Set(regs.map((r) => r.dog_name).filter(Boolean))].join(', ')].filter(Boolean).join(' - ').slice(0, 100),
+      description: [owner_name, slots.join(', ')].filter(Boolean).join(' - ').slice(0, 100),
       returnUrl,
     });
 
