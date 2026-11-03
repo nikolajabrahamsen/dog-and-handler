@@ -244,7 +244,7 @@ a { color: inherit; }
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  z-index: 40;
+  z-index: 60; /* above the bottom selection bar (50) so the form's own button is never covered */
 }
 @media (min-width: 640px) {
   .modal-backdrop { align-items: center; }
@@ -256,8 +256,9 @@ a { color: inherit; }
   width: 100%;
   max-width: 480px;
   border-radius: 18px 18px 0 0;
-  padding: 26px 24px 28px;
+  padding: 26px 24px calc(28px + env(safe-area-inset-bottom));
   max-height: 90vh;
+  max-height: 90dvh; /* the visible height, so phone browser toolbars don't hide the bottom */
   overflow-y: auto;
 }
 @media (min-width: 640px) {
@@ -446,3 +447,5 @@ a { color: inherit; }
 .inapp-notice .inapp-actions { display: flex; gap: 14px; align-items: center; justify-content: center; margin-top: 10px; }
 .inapp-notice .btn-link { color: var(--ink); }
 .inapp-notice .btn-primary { background: var(--ink); color: var(--bone); border-color: var(--ink); }
+
+body.modal-open .selection-bar { display: none; }

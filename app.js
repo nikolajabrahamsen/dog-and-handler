@@ -228,6 +228,7 @@ function openRegisterModal(classIds, classes) {
   const conflict = !canMobile && !canClass;
 
   const root = document.getElementById('modalRoot');
+  document.body.classList.add('modal-open'); // hides the bottom selection bar behind the form
 
   if (conflict) {
     root.innerHTML = `
@@ -400,6 +401,7 @@ function openRegisterModal(classIds, classes) {
 
 function closeModal() {
   document.getElementById('modalRoot').innerHTML = '';
+  document.body.classList.remove('modal-open');
 }
 
 // Re-render class cards in the new language; close any open modal since
