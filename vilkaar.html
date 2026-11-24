@@ -4,16 +4,22 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Handelsbetingelser – Hund &amp; Handler</title>
-<link rel="manifest" href="/manifest.json" />
 <meta name="theme-color" content="#1F2A20" />
 <link rel="icon" href="/icons/favicon.png" />
 <link rel="stylesheet" href="/styles.css" />
+<style>.terms-lang[hidden] { display: none; }</style>
 </head>
 <body>
+
+<div id="langSwitcher"></div>
+
 <main class="terms-page">
+
+<!-- ============ DANSK ============ -->
+<div class="terms-lang" data-lang="da">
   <a class="terms-back" href="/">← Tilbage til forsiden</a>
   <h1>Handelsbetingelser</h1>
-  <p>Gælder for køb af pladser på hundetræningshold hos <span data-company="brand"></span>. Sidst opdateret: oktober 2026.</p>
+  <p>Gælder for køb af pladser på hundetræningshold hos <span data-company="brand"></span>. Sidst opdateret: november 2026.</p>
 
   <h2>1. Sælger</h2>
   <p>
@@ -24,6 +30,7 @@
 
   <h2>2. Ydelse og pris</h2>
   <p>Du køber en plads på et hundetræningshold. Titel, tidspunkt, sted og pris fremgår af holdet på forsiden, før du tilmelder dig. Alle priser er i danske kroner (DKK) og inkl. moms, hvor moms er relevant. Der tilkommer ingen skjulte gebyrer.</p>
+  <p>Vi forbeholder os retten til at gøre brug af en vikartræner i tilfælde af sygdom eller anden force majeure.</p>
 
   <h2>3. Tilmelding og pladser</h2>
   <p>Hvert hold har et maksimalt antal deltagere. Din plads er først bekræftet, når betalingen er gennemført (MobilePay) eller tilmeldingen er bekræftet (betaling ved fremmøde). Du modtager en bekræftelse på e-mail. En ubetalt reservation holdes i 15 minutter.</p>
@@ -45,6 +52,47 @@
 
   <h2>9. Lovvalg</h2>
   <p>Aftalen er underlagt dansk ret.</p>
+</div>
+
+<!-- ============ ENGLISH ============ -->
+<div class="terms-lang" data-lang="en" hidden>
+  <a class="terms-back" href="/">← Back to the front page</a>
+  <h1>Terms and conditions</h1>
+  <p>Apply to the purchase of places in dog training classes with <span data-company="brand"></span>. Last updated: November 2026.</p>
+
+  <h2>1. Seller</h2>
+  <p>
+    <span data-company="legalName"></span> (CVR <span data-company="cvr"></span>)<br />
+    <span data-company="address"></span><br />
+    Email: <span data-company="email"></span> · Phone: <span data-company="phone"></span>
+  </p>
+
+  <h2>2. Service and price</h2>
+  <p>You are buying a place in a dog training class. The title, time, location and price are shown for each class on the front page before you register. All prices are in Danish kroner (DKK) and include VAT where VAT applies. There are no hidden fees.</p>
+  <p>We reserve the right to use a substitute trainer in the event of illness or other force majeure.</p>
+
+  <h2>3. Registration and places</h2>
+  <p>Each class has a maximum number of participants. Your place is only confirmed once payment has been completed (MobilePay) or your registration has been confirmed (pay at class). You will receive a confirmation by email. An unpaid reservation is held for 15 minutes.</p>
+
+  <h2>4. Payment</h2>
+  <p>You can pay with MobilePay or choose to pay at your first class. When paying with MobilePay, the amount is charged when you approve the payment in the MobilePay app. The payment is handled by Vipps MobilePay; we do not receive or store your payment details.</p>
+
+  <h2>5. Right of withdrawal</h2>
+  <p>Dog training is a leisure activity with a specific date for the service. There is therefore no statutory right of withdrawal under Section 18(2)(12) of the Danish Consumer Contracts Act.</p>
+
+  <h2>6. No refund after payment</h2>
+  <p>Once you have paid, you cannot get your money back. This also applies if you do not show up or if you cancel. If we cancel a class ourselves, we will offer you a place on a new date or refund the full amount.</p>
+
+  <h2>7. Personal data</h2>
+  <p>We process your name, email, phone number and your dog's name in order to manage your registration. If you have opted in, we will send you newsletters about new classes; you can unsubscribe at any time using the link in the email. We only share information with the data processors needed to run the service (hosting, email and payment). You can always ask for access to or deletion of your information by contacting us.</p>
+
+  <h2>8. Complaints</h2>
+  <p>Please contact us first at <span data-company="email"></span> if you are dissatisfied. If we cannot find a solution, you can complain to the Danish Center for Complaint Resolution (Center for Klageløsning), Nævnenes Hus, Toldboden 2, 8800 Viborg, Denmark (<a href="https://naevneneshus.dk" target="_blank" rel="noopener">naevneneshus.dk</a>). If you live in another EU country, you can also use the European Commission's online dispute resolution platform.</p>
+
+  <h2>9. Governing law</h2>
+  <p>The agreement is governed by Danish law.</p>
+</div>
+
 </main>
 
 <footer id="siteFooter" class="site-footer"></footer>
@@ -52,5 +100,17 @@
 <script src="/i18n.js"></script>
 <script src="/company-config.js"></script>
 <script src="/company.js"></script>
+<script>
+  // Show the terms in the visitor's chosen language (DA by default).
+  function showTermsLanguage() {
+    var lang = getLang() === 'en' ? 'en' : 'da';
+    document.querySelectorAll('.terms-lang').forEach(function (el) {
+      el.hidden = el.getAttribute('data-lang') !== lang;
+    });
+    document.title = lang === 'en' ? 'Terms and conditions – Hund & Handler' : 'Handelsbetingelser – Hund & Handler';
+  }
+  document.addEventListener('DOMContentLoaded', showTermsLanguage);
+  window.addEventListener('langchange', showTermsLanguage);
+</script>
 </body>
 </html>
