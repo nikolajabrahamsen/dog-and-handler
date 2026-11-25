@@ -59,6 +59,11 @@
   .txt-warn { background: rgba(200,155,60,0.15); border: 1px solid var(--brass); border-radius: 8px; padding: 8px 12px; font-size: 13px; }
   .txt-note { color: var(--bone-dim); font-size: 13px; }
   @media (max-width: 640px) { .txt-cols { grid-template-columns: 1fr; } }
+  .admin-tabs { display: flex; gap: 8px; margin: 0 0 20px; overflow-x: auto; padding-bottom: 2px; }
+  .admin-tab { flex: 0 0 auto; background: transparent; color: var(--bone); border: 1px solid var(--brass); border-radius: 999px; padding: 10px 22px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .admin-tab:hover { background: rgba(200,155,60,0.18); }
+  .admin-tab.active { background: var(--brass); color: var(--pine-deep); }
+  [data-tab-panel][hidden] { display: none; }
 </style>
 </head>
 <body>
@@ -77,6 +82,13 @@
     </div>
   </div>
 
+  <div class="admin-tabs" id="adminTabs" role="tablist">
+    <button type="button" class="admin-tab" role="tab" data-tab="classes">Hold</button>
+    <button type="button" class="admin-tab" role="tab" data-tab="newsletter">Nyhedsbrev</button>
+    <button type="button" class="admin-tab" role="tab" data-tab="texts">Tekster</button>
+  </div>
+
+  <div data-tab-panel="classes">
   <div class="admin-card" id="createClassCard">
     <h2 id="createFormHeading" data-i18n="create_class_heading">Opret hold</h2>
     <form id="createForm">
@@ -156,6 +168,15 @@
   </div>
 
   <div class="admin-card">
+    <h2 data-i18n="classes_rosters_heading">Hold &amp; tilmeldte</h2>
+    <div id="classesList" data-i18n="loading_msg">Indlæser…</div>
+    <h3 class="old-classes-heading" id="oldClassesHeading" data-i18n="old_classes_heading" hidden>Gamle hold (seneste 10)</h3>
+    <div id="oldClassesList"></div>
+  </div>
+  </div>
+
+  <div data-tab-panel="newsletter" hidden>
+  <div class="admin-card">
     <h2 data-i18n="newsletter_heading">Nyhedsbrev</h2>
     <p style="color: var(--bone-dim); font-size: 13px; margin-top:-4px;">
       <span id="subscriberCount" data-i18n="loading_subscriber_count">Indlæser antal tilmeldte…</span>
@@ -173,7 +194,9 @@
       <div id="nlMsg" class="form-error" style="color: var(--brass-bright)" hidden></div>
     </form>
   </div>
+  </div>
 
+  <div data-tab-panel="texts" hidden>
   <div class="admin-card" id="textsCard">
     <h2 id="textsHeading">Tekster</h2>
     <p id="textsIntro" style="color: var(--bone-dim); font-size: 13px; margin-top:-4px;"></p>
@@ -183,12 +206,6 @@
     </div>
     <div id="textsMsg" class="form-error" style="color: var(--brass-bright)" hidden></div>
   </div>
-
-  <div class="admin-card">
-    <h2 data-i18n="classes_rosters_heading">Hold &amp; tilmeldte</h2>
-    <div id="classesList" data-i18n="loading_msg">Indlæser…</div>
-    <h3 class="old-classes-heading" id="oldClassesHeading" data-i18n="old_classes_heading" hidden>Gamle hold (seneste 10)</h3>
-    <div id="oldClassesList"></div>
   </div>
 </div>
 
@@ -199,5 +216,6 @@
 <script src="/i18n.js"></script>
 <script src="/admin.js"></script>
 <script src="/admin-texts.js"></script>
+<script src="/admin-tabs.js"></script>
 </body>
 </html>
