@@ -47,6 +47,18 @@
     padding-top: 16px;
     border-top: 1px solid var(--line);
   }
+  .txt-group { border-top: 1px solid var(--line); padding: 10px 0; }
+  .txt-group summary { cursor: pointer; font-weight: 600; font-size: 15px; padding: 4px 0; }
+  .txt-field { margin: 14px 0; }
+  .txt-label { font-size: 13px; color: var(--bone-dim); margin-bottom: 6px; }
+  .txt-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .txt-cols.one { grid-template-columns: 1fr; }
+  .txt-col textarea { width: 100%; box-sizing: border-box; min-height: 0; resize: vertical; }
+  .txt-lang { display: block; font-size: 12px; margin-bottom: 4px; }
+  .txt-restore { background: none; border: 0; color: var(--bone-dim); text-decoration: underline; cursor: pointer; font-size: 12px; padding: 4px 0; }
+  .txt-warn { background: rgba(200,155,60,0.15); border: 1px solid var(--brass); border-radius: 8px; padding: 8px 12px; font-size: 13px; }
+  .txt-note { color: var(--bone-dim); font-size: 13px; }
+  @media (max-width: 640px) { .txt-cols { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -162,6 +174,16 @@
     </form>
   </div>
 
+  <div class="admin-card" id="textsCard">
+    <h2 id="textsHeading">Tekster</h2>
+    <p id="textsIntro" style="color: var(--bone-dim); font-size: 13px; margin-top:-4px;"></p>
+    <div id="textsBody"></div>
+    <div style="margin-top:16px">
+      <button class="btn btn-primary" type="button" id="textsSaveBtn">Gem tekster</button>
+    </div>
+    <div id="textsMsg" class="form-error" style="color: var(--brass-bright)" hidden></div>
+  </div>
+
   <div class="admin-card">
     <h2 data-i18n="classes_rosters_heading">Hold &amp; tilmeldte</h2>
     <div id="classesList" data-i18n="loading_msg">Indlæser…</div>
@@ -176,5 +198,6 @@
 <script src="/supabase-config.js"></script>
 <script src="/i18n.js"></script>
 <script src="/admin.js"></script>
+<script src="/admin-texts.js"></script>
 </body>
 </html>
